@@ -14,10 +14,13 @@ loadusr -Wn arduino /home/cnc/arduino-connector -n arduino
 # ---------------------------------------------------------
 # Načtení RT komponent
 loadrt or2
-loadrt and2   count=6
+loadrt and2   count=8
 loadrt near   count=3
 loadrt mux2   names=mux_homing
 loadrt siggen
+loadrt debounce cfg=3
+loadrt oneshot count=1
+addf oneshot.0 servo-thread
 
 # Přidání funkcí do servo-threadu
 addf or2.0           servo-thread
@@ -27,11 +30,14 @@ addf and2.2          servo-thread
 addf and2.3          servo-thread
 addf and2.4          servo-thread
 addf and2.5          servo-thread
+addf and2.6          servo-thread
+addf and2.7          servo-thread
 addf near.0          servo-thread
 addf near.1          servo-thread
 addf near.2          servo-thread
 addf mux_homing      servo-thread
 addf siggen.0.update servo-thread
+addf debounce.0 servo-thread
 
 # ---------------------------------------------------------
 # 3. E-STOP CONFIGURATION (Combined MPG + Arduino)
@@ -187,3 +193,38 @@ net z-is-zero         near.2.out              => and2.5.in1
 
 # Rozsvícení LED na Arduinu (pin 3), pokud jsou všechny osy v nule
 net all-axes-at-zero  and2.5.out              => arduino.dled.3
+
+# --- Ovládání programu (Start, Pause, Stop) ---
+
+setp oneshot.0.width 0.1
+
+# --- DEBOUNCE FILTR PRO TLAČÍTKA ---
+net raw-start  arduino.din.6  => debounce.0.0.in
+net raw-pause  arduino.din.7  => debounce.0.1.in
+net raw-stop   arduino.din.10 => debounce.0.2.in
+
+# --- UPRAVENÉ OVLÁDÁNÍ PROGRAMU ---
+
+# Nastavení pro všechny 3 kanály (Start, Pause, Stop)
+setp debounce.0.delay 20
+# CYCLE START (Teď používá čistý signál z debounce)
+net clean-start  debounce.0.0.out => halui.program.run
+
+# --- Inteligentní PAUSE / RESUME s ochranou proti držení ---
+
+# 1. Signál z tlačítka (po debounce) jde do oneshot
+net clean-pause  debounce.0.1.out => oneshot.0.in
+
+# 2. Výstup z oneshot (krátký puls) jde do logiky místo tlačítka
+net pause-pulse  oneshot.0.out => and2.6.in0 and2.7.in0
+
+# 3. Logika pro PAUSE (zůstává stejná, jen s novým vstupem)
+net program-rnning   => and2.6.in1
+net do-pause         and2.6.out => halui.program.pause
+
+# 4. Logika pro RESUME (zůstává stejná, jen s novým vstupem)
+net is-paused        halui.program.is-paused => and2.7.in1
+net do-resume        and2.7.out => halui.program.resume
+
+# STOP (Teď používá čistý signál z debounce)
+net clean-stop   debounce.0.2.out => halui.program.stop

@@ -1,204 +1,203 @@
-# Include your custom_postgui HAL commands here
-# This file will not be overwritten when you run stepconf again
+# =================================================================
+# CUSTOM POSTGUI HAL COMMANDS
+# This file is for user-defined HAL commands for Gmoccapy / MPG
+# =================================================================
 
-
-#loadusr -W mpg -d /dev/ttyACM0 -s 
-loadusr  -W /home/cnc/mpg -d /dev/ttyACM0 -s 
-#loadusr  -Wn /home/cnc/arduino-connector  -n test
+# ---------------------------------------------------------
+# 1. EXTERNAL USER COMPONENTS (MPG & ARDUINO)
+# ---------------------------------------------------------
+loadusr -W  /home/cnc/mpg -d /dev/ttyACM0 -s 
 loadusr -Wn arduino /home/cnc/arduino-connector -n arduino
 
+# ---------------------------------------------------------
+# 2. SYSTEM LOGIC & MODULES
+# ---------------------------------------------------------
 
+# U 'near' a 'and2' count funguje.
+# U 'siggen', 'mux2' a 'or2' zkusíme načtení bez count nebo se jmény.
+loadrt or2
+loadrt and2 count=6
+loadrt near count=3
+loadrt mux2 names=mux_homing
+loadrt siggen
 
-#Spindle SPEED Display
-net spindle-cmd-rpm gmoccapy.spindle_feedback_bar
+# Přidání funkcí do servo-threadu
+addf or2.0           servo-thread
+addf and2.0          servo-thread
+addf and2.1          servo-thread
+addf and2.2          servo-thread
+addf and2.3          servo-thread
+addf and2.4          servo-thread
+addf and2.5          servo-thread
+addf near.0          servo-thread
+addf near.1          servo-thread
+addf near.2          servo-thread
+addf mux_homing      servo-thread
+addf siggen.0.update servo-thread
 
-#Spindle status display
-net spindle-status <= spindle.0.forward
+# ---------------------------------------------------------
+# 3. E-STOP CONFIGURATION (Combined MPG + Arduino)
+# ---------------------------------------------------------
+# Merging two E-stop sources into one signal
+net estop_mpg     mpg.button.estop   => or2.0.in0
+net estop_arduino arduino.din.5      => or2.0.in1
+net ext-estop     or2.0.out          => halui.estop.activate
 
-#net spindle-status gmoccapy.spindle_at_speed_led
-net spindle-timer gmoccapy.spindle_at_speed_led
+# ---------------------------------------------------------
+# 4. SPINDLE & STATUS DISPLAYS
+# ---------------------------------------------------------
+# RPM Display and Feedback
+net spindle-cmd-rpm  gmoccapy.spindle_feedback_bar
+net spindle-cmd-rpm  <= mpg.spindle.speed
 
-net spindle-cmd-rpm <= mpg.spindle.speed
+# Status LEDs
+net spindle-status   <= spindle.0.forward
+net spindle-timer    gmoccapy.spindle_at_speed_led
 
-# MPG
-#net iocontrol_0_emc-enable-in <= mpg.button.sel04-toggle
-#net iocontrol_0_emc-enable-in => iocontrol.0.emc-enable-in
+# Machine/Program Status
+net machine-on       halui.machine.is-on      => mpg.machine.is-on
+net machine-on       => arduino.dled.0
+net program-rnning   halui.program.is-running => mpg.program.is-running
 
-#ESTOP Connection
-# -----------------------
-# ESTOP Connection (MPG + Arduino)
-# -----------------------
-
-# PUVODNI RADKU ZAKOMENTUJ / SMAZ:
-# net ext-estop mpg.button.estop => halui.estop.activate
-
-# Slouceni dvou tlacitek do jednoho E-STOP signalu
-loadrt or2 count=1
-addf or2.0 servo-thread
-
-# Vstupy do OR
-net estop_mpg     mpg.button.estop  => or2.0.in0
-net estop_arduino arduino.din.5     => or2.0.in1
-
-# Vystup OR = ext-estop, ten aktivuje E-STOP v halui
-net ext-estop     or2.0.out         => halui.estop.activate
-
-
-#net external-estop <= mpg.button.sel04-toggle
-#net external-estop => halui.estop.activate
-
-
-#net spindle_start <= mpg.button.01
-#net spindle_start => halui.spindle.0.start
-
-#net spindle_stop <= mpg.button.01b
-#net spindle_stop => halui.spindle.0.stop
-
-
-#machine is on
-net machine-on halui.machine.is-on => mpg.machine.is-on
-
-#Arduino
-net machine-on => arduino.dled.0
-
-#program Running
-net program-rnning halui.program.is-running => mpg.program.is-running
-
-
+# ---------------------------------------------------------
+# 5. JOGGING & AXIS CONTROL
+# ---------------------------------------------------------
+# Global Jog Scale
 net external-jog-scale-value <= mpg.jog-scale
 
-
-#X Axis
+# X Axis Jogging
 setp joint.0.jog-vel-mode 1
-#setp joint.0.jog-scale 0.01
-setp joint.0.jog-enable 1
-
-setp axis.x.jog-vel-mode 1
-#setp axis.x.jog-scale 0.01
-setp axis.x.jog-enable 1
-
-
+setp joint.0.jog-enable   1
+setp axis.x.jog-vel-mode  1
+setp axis.x.jog-enable    1
 net external-jog-scale-value => joint.0.jog-scale
 net external-jog-scale-value => axis.x.jog-scale
+net axis_x_jog-counts        <= mpg.axis.x.jog-counts
+net axis_x_jog-counts        => axis.x.jog-counts
+net axis_x_jog-counts        => joint.0.jog-counts
 
-
-net axis_x_jog-counts <= mpg.axis.x.jog-counts
-net axis_x_jog-counts => axis.x.jog-counts
-net axis_x_jog-counts => joint.0.jog-counts
-
-#ARDUINO BUTTONS
-
-# Home All z Arduino tlacitka
-net home-all-btn  arduino.din.8  =>  halui.home-all
-
-
-#BLIKANI PRI HOMINGU - START
-
-
-
-
-#BLIKANI PRI HOMINGU - END
-
-#Y Axis
+# Y Axis Jogging
 setp joint.1.jog-vel-mode 1
-#setp joint.1.jog-scale 0.01
-setp joint.1.jog-enable 1
-
-setp axis.y.jog-vel-mode 1
-#setp axis.y.jog-scale 0.01
-setp axis.y.jog-enable 1
-
-
+setp joint.1.jog-enable   1
+setp axis.y.jog-vel-mode  1
+setp axis.y.jog-enable    1
 net external-jog-scale-value => joint.1.jog-scale
 net external-jog-scale-value => axis.y.jog-scale
+net axis_y_jog-counts        <= mpg.axis.y.jog-counts
+net axis_y_jog-counts        => axis.y.jog-counts
+net axis_y_jog-counts        => joint.1.jog-counts
 
-net axis_y_jog-counts <= mpg.axis.y.jog-counts
-net axis_y_jog-counts => axis.y.jog-counts
-net axis_y_jog-counts => joint.1.jog-counts
-
-#Z Axis
+# Z Axis Jogging
 setp joint.2.jog-vel-mode 1
-#setp joint.2.jog-scale 0.01
-setp joint.2.jog-enable 1
-
-setp axis.z.jog-vel-mode 1
-#setp axis.z.jog-scale 0.01
-setp axis.z.jog-enable 1
-
-
+setp joint.2.jog-enable   1
+setp axis.z.jog-vel-mode  1
+setp axis.z.jog-enable    1
 net external-jog-scale-value => joint.2.jog-scale
 net external-jog-scale-value => axis.z.jog-scale
+net axis_z_jog-counts        <= mpg.axis.z.jog-counts
+net axis_z_jog-counts        => axis.z.jog-counts
+net axis_z_jog-counts        => joint.2.jog-counts
 
-net axis_z_jog-counts <= mpg.axis.z.jog-counts
-net axis_z_jog-counts => axis.z.jog-counts
-net axis_z_jog-counts => joint.2.jog-counts
-
-
+# ---------------------------------------------------------
+# 6. MPG DISPLAY FEEDBACK (DRO)
+# ---------------------------------------------------------
 net display_x halui.axis.x.pos-relative => mpg.axis.x.pos
 net display_y halui.axis.y.pos-relative => mpg.axis.y.pos
 net display_z halui.axis.z.pos-relative => mpg.axis.z.pos
 
+# ---------------------------------------------------------
+# 7. OVERRIDES (Feed, Rapid, Spindle)
+# ---------------------------------------------------------
+# Feed Override
 setp halui.feed-override.scale 0.01
-net feed-override <= mpg.override.feed.counts
-net feed-override => halui.feed-override.counts
-
-setp halui.rapid-override.scale 0.01
-net rapid-override <= mpg.override.rapid.counts
-net rapid-override => halui.rapid-override.counts
-
-setp halui.spindle.0.override.scale 0.01
-net spindle-override <= mpg.override.spindle.counts
-net spindle-override => halui.spindle.0.override.counts
-
+net feed-override       <= mpg.override.feed.counts
+net feed-override       => halui.feed-override.counts
 net override-feed-value <= halui.feed-override.value
 net override-feed-value => mpg.override.feed.value
 
+# Rapid Override
+setp halui.rapid-override.scale 0.01
+net rapid-override       <= mpg.override.rapid.counts
+net rapid-override       => halui.rapid-override.counts
 net override-rapid-value <= halui.rapid-override.value
 net override-rapid-value => mpg.override.rapid.value
 
+# Spindle Override
+setp halui.spindle.0.override.scale 0.01
+net spindle-override       <= mpg.override.spindle.counts
+net spindle-override       => halui.spindle.0.override.counts
 net override-spindle-value <= halui.spindle.0.override.value
 net override-spindle-value => mpg.override.spindle.value
 
+# ---------------------------------------------------------
+# 8. MDI COMMANDS & ARDUINO BUTTONS
+# ---------------------------------------------------------
+# ---------------------------------------------------------
+# ARDUINO HOME-ALL (S automatickým přepnutím do Joint Mode)
+# ---------------------------------------------------------
 
-#ARDUINO CONNECTOR
+# Když zmáčknete tlačítko na Arduinu:
+# 1. Přepne stroj do Joint Mode (potřebné pro homing)
+net home-all-btn  arduino.din.8  =>  halui.mode.joint
 
-#source arduino-connector.hal
-
-#Zero All Axis
-#net zero_all halui.mdi-command-03 <= gladevcp.zero_all_axes
-
-
+# 2. Spustí proceduru Home All
+net home-all-btn  =>  halui.home-all
 
 
-loadrt and2 count=4
-addf and2.0 servo-thread
-addf and2.1 servo-thread
-addf and2.2 servo-thread
-addf and2.3 servo-thread
+# Controler LED for Machine Homed Status
+net machine-is-homed  motion.is-all-homed => arduino.dled.6
 
-# X
-net mpg-x-raw      mpg.button.01-long   => and2.0.in0
-net is-manual      halui.mode.is-manual => and2.0.in1
-net mpg-zero-x     halui.mdi-command-00 <= and2.0.out
+# Manual Mode Condition for Zeroing
+net is-manual  halui.mode.is-manual
 
-# Y
-net mpg-y-raw      mpg.button.02-long   => and2.1.in0
+# Zeroing Buttons (X, Y, Z) via MDI Commands
+# X Zero
+net mpg-x-raw   mpg.button.01-long => and2.0.in0
+net is-manual                      => and2.0.in1
+net mpg-zero-x  halui.mdi-command-00 <= and2.0.out
+
+# Y Zero
+net mpg-y-raw   mpg.button.02-long => and2.1.in0
 net is-manual                      => and2.1.in1
-net mpg-zero-y     halui.mdi-command-01 <= and2.1.out
+net mpg-zero-y  halui.mdi-command-01 <= and2.1.out
 
-# Z
-net mpg-z-raw      mpg.button.03-long   => and2.2.in0
+# Z Zero
+net mpg-z-raw   mpg.button.03-long => and2.2.in0
 net is-manual                      => and2.2.in1
-net mpg-zero-z     halui.mdi-command-02 <= and2.2.out
-
-# ALL
-#net mpg-all-raw    mpg.button.04-long   => and2.3.in0
-#net is-manual                      => and2.3.in1
-#net mpg-zero-all   halui.mdi-command-03 <= and2.3.out
+net mpg-zero-z  halui.mdi-command-02 <= and2.2.out
 
 
+# --- Vynulování všech os (X Y Z) tlačítkem z Arduina ---
+
+# Použijeme poslední volné hradlo and2.3, které už máte načtené
+net mpg-all-raw    arduino.din.16       => and2.3.in0
+net is-manual                           => and2.3.in1
+net mpg-zero-all   halui.mdi-command-03 <= and2.3.out
+
+# Nastavení tolerance
+setp near.0.difference 0.01
+setp near.1.difference 0.01
+setp near.2.difference 0.01
+
+# Napojení na existující signály, které už vedou do MPG
+net display_x => near.0.in1
+setp near.0.in2 0
+
+net display_y => near.1.in1
+setp near.1.in2 0
+
+net display_z => near.2.in1
+setp near.2.in2 0
+
+# Logická kaskáda (zůstává stejná)
+net x-is-zero  near.0.out => and2.4.in0
+net y-is-zero  near.1.out => and2.4.in1
+net xy-is-zero and2.4.out => and2.5.in0
+net z-is-zero  near.2.out => and2.5.in1
+
+# Finální signál
+net all-axes-at-zero and2.5.out
 
 
-
-
-
+# Rozsvícení LED na Arduinu (pin 3), pokud jsou všechny osy v nule
+net all-axes-at-zero => arduino.dled.3

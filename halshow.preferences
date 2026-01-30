@@ -5,40 +5,24 @@ placeFrames 0.22179732313575526
 set ::ratio 0.22179732313575526
 set ::old_w_leftf 370
 set ::watchlist {
-    pin+mpg.jog-scale
-    pin+mpg.axis.a.homed
-    pin+mpg.override.spindle.value
-    pin+mpg.override.spindle.counts
-    pin+mpg.program.is-running
-    pin+mpg.spindle.speed
-    pin+spindle.0.amp-fault-in
-    pin+spindle.0.at-speed
-    pin+spindle.0.brake
-    pin+spindle.0.forward
-    pin+spindle.0.index-enable
-    pin+spindle.0.inhibit
-    pin+spindle.0.is-oriented
-    pin+spindle.0.locked
-    pin+spindle.0.on
-    pin+spindle.0.orient
-    pin+spindle.0.orient-angle
-    pin+spindle.0.orient-fault
-    pin+spindle.0.orient-mode
-    pin+spindle.0.reverse
-    pin+spindle.0.revs
-    pin+spindle.0.speed-cmd-rps
-    pin+spindle.0.speed-in
-    pin+spindle.0.speed-out
-    pin+spindle.0.speed-out-abs
-    pin+spindle.0.speed-out-rps
-    pin+spindle.0.speed-out-rps-abs
-    pin+arduino.din.10
-    pin+arduino.din.16
-    pin+arduino.din.5
-    pin+arduino.din.6
-    pin+arduino.din.7
-    pin+arduino.din.8
-    pin+arduino.din.9
+    pin+mpg.button.estop
+    pin+mpg.button.estop-not
+    pin+mpg.button.estop-toggle
+    pin+mpg.button.estop-toggle-not
+    pin+mpg.button.estop-toggle-off
+    pin+mpg.button.estop-toggle-on
+    pin+halui.mode.auto
+    pin+halui.mode.is-auto
+    pin+halui.mode.is-joint
+    pin+halui.mode.is-manual
+    pin+halui.mode.is-mdi
+    pin+halui.mode.is-teleop
+    pin+halui.mode.joint
+    pin+halui.mode.manual
+    pin+halui.mode.mdi
+    pin+halui.mode.teleop
+    pin+halui.home-all
+    pin+motion.is-all-homed
     pin+arduino.dled.0
     pin+arduino.dled.1
     pin+arduino.dled.2
@@ -47,23 +31,16 @@ set ::watchlist {
     pin+arduino.dled.5
     pin+arduino.dled.6
     pin+arduino.dled.7
-    pin+motion.homing-inhibit
-    pin+motion.is-all-homed
-    pin+joint.0.homing
-    pin+joint.3.homing
-    pin+joint.1.homing
-    pin+mpg.button.sel02-long
-    pin+mpg.button.sel03-long
-    pin+mpg.button.sel05-long
-    pin+mpg.button.sel04-long
+    pin+arduino.din.10
+    pin+arduino.din.16
+    pin+arduino.din.5
+    pin+arduino.din.6
+    pin+arduino.din.7
+    pin+arduino.din.8
+    pin+arduino.din.9
     sig+is-manual
-    pin+mpg.button.estop
-    pin+mpg.button.estop-not
-    pin+mpg.button.estop-toggle
-    pin+mpg.button.estop-toggle-not
-    pin+mpg.button.estop-toggle-off
-    pin+mpg.button.estop-toggle-on
-    pin+mpg.button.sel01
+    sig+all-axes-at-zero
+    pin+joint.0.homing
 }
 set ::workmode watchhal
 set ::watchInterval 100

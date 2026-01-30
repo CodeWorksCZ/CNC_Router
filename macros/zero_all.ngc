@@ -1,0 +1,13 @@
+; Zero ALL axes (X, Y, Z) of the current work offset (G54)
+
+O<zero_all> sub
+
+    (Make sure we are in absolute mode and using G54)
+    G90
+    G54
+
+    ; Set current position as X0 Y0 Z0 in the current work offset
+    G10 L20 P0 X0 Y0 Z0
+
+O<zero_all> endsub
+M2

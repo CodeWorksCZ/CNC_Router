@@ -1,0 +1,6 @@
+<glade-interface>
+  <object class="GtkButton" id="zero_all_axes">
+    <property name="label">Zero All Axes</property>
+    <signal name="pressed" handler="on_zero_all_axes_pressed"/>
+  </object>
+</glade-interface>

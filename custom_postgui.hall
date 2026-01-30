@@ -1,0 +1,165 @@
+# Include your custom_postgui HAL commands here
+# This file will not be overwritten when you run stepconf again
+
+# --- NAČTENÍ KOMPONENT (VŽDY NA ZAČÁTKU) ---
+loadrt siggen
+loadrt or2 count=3
+loadrt and2 count=6
+
+loadrt not count=1        # Přidej toto k ostatním loadrt
+addf not.0 servo-thread   # Přidej toto k ostatním addf
+
+
+# --- PŘIDÁNÍ ZÁKLADNÍCH FUNKCÍ DO VLÁKNA ---
+addf siggen.0.update servo-thread
+addf or2.0 servo-thread
+addf or2.1 servo-thread
+
+# Přidání všech AND hradel najednou
+addf and2.0 servo-thread
+addf and2.1 servo-thread
+addf and2.2 servo-thread
+addf and2.3 servo-thread
+addf and2.4 servo-thread
+addf and2.5 servo-thread
+
+# --- NAČTENÍ EXTERNÍCH OVLADAČŮ ---
+loadusr -W /home/cnc/mpg -d /dev/ttyACM0 -s 
+loadusr -Wn arduino /home/cnc/arduino-connector -n arduino
+
+# --- BLIKANI PRI HOMINGU (NASTAVENÍ) ---
+setp siggen.0.frequency 2
+
+# -----------------------
+# ESTOP Connection (MPG + Arduino)
+# -----------------------
+net estop_mpg      mpg.button.estop  => or2.0.in0
+net estop_arduino  arduino.din.5     => or2.0.in1
+net ext-estop      or2.0.out         => halui.estop.activate
+
+# --- MACHINE STATUS ---
+net machine-on halui.machine.is-on => mpg.machine.is-on
+net machine-on => arduino.dled.0
+
+# --- SPINDLE ---
+net spindle-cmd-rpm gmoccapy.spindle_feedback_bar
+net spindle-status <= spindle.0.forward
+net spindle-timer gmoccapy.spindle_at_speed_led
+net spindle-cmd-rpm <= mpg.spindle.speed
+
+# --- PROGRAM STATUS ---
+net program-rnning halui.program.is-running => mpg.program.is-running
+net external-jog-scale-value <= mpg.jog-scale
+
+# --- ARDUINO BUTTONS ---
+net home-all-btn  arduino.din.8  =>  halui.home-all
+
+# ---------------------------------------------------------
+# BLIKANI PRI HOMINGU - START
+# ---------------------------------------------------------
+
+# 1. AND: Propustí blikání ze siggenu jen když běží homing
+net homing-is-active  joint.3.homing => and2.4.in0
+net blink-siggen      siggen.0.clock         => and2.4.in1
+
+# 2. OR: LED má signál pokud (bliká) NEBO (už je zhomováno)
+net blinking-now      and2.4.out             => or2.1.in0
+net all-homed-sig     motion.is-all-homed        => or2.1.in1
+
+# 3. AND: Bezpečnost - LED svítí/bliká jen pokud je stroj zapnutý
+net led-pre-final     or2.1.out              => and2.5.in0
+net machine-on                               => and2.5.in1
+
+# Finální propojení na Arduino pin 6
+net led-homing-final  and2.5.out             => arduino.dled.6
+
+# ---------------------------------------------------------
+# BLIKANI PRI HOMINGU - END
+# ---------------------------------------------------------
+
+# --- AXIS X ---
+setp joint.0.jog-vel-mode 1
+setp joint.0.jog-enable 1
+setp axis.x.jog-vel-mode 1
+setp axis.x.jog-enable 1
+net external-jog-scale-value => joint.0.jog-scale
+net external-jog-scale-value => axis.x.jog-scale
+net axis_x_jog-counts <= mpg.axis.x.jog-counts
+net axis_x_jog-counts => axis.x.jog-counts
+net axis_x_jog-counts => joint.0.jog-counts
+
+# --- AXIS Y ---
+setp joint.1.jog-vel-mode 1
+setp joint.1.jog-enable 1
+setp axis.y.jog-vel-mode 1
+setp axis.y.jog-enable 1
+net external-jog-scale-value => joint.1.jog-scale
+net external-jog-scale-value => axis.y.jog-scale
+net axis_y_jog-counts <= mpg.axis.y.jog-counts
+net axis_y_jog-counts => axis.y.jog-counts
+net axis_y_jog-counts => joint.1.jog-counts
+
+# --- AXIS Z ---
+setp joint.2.jog-vel-mode 1
+setp joint.2.jog-enable 1
+setp axis.z.jog-vel-mode 1
+setp axis.z.jog-enable 1
+net external-jog-scale-value => joint.2.jog-scale
+net external-jog-scale-value => axis.z.jog-scale
+net axis_z_jog-counts <= mpg.axis.z.jog-counts
+net axis_z_jog-counts => axis.z.jog-counts
+net axis_z_jog-counts => joint.2.jog-counts
+
+# --- DISPLAY & OVERRIDES ---
+net display_x halui.axis.x.pos-relative => mpg.axis.x.pos
+net display_y halui.axis.y.pos-relative => mpg.axis.y.pos
+net display_z halui.axis.z.pos-relative => mpg.axis.z.pos
+
+setp halui.feed-override.scale 0.01
+net feed-override <= mpg.override.feed.counts
+net feed-override => halui.feed-override.counts
+
+setp halui.rapid-override.scale 0.01
+net rapid-override <= mpg.override.rapid.counts
+net rapid-override => halui.rapid-override.counts
+
+setp halui.spindle.0.override.scale 0.01
+net spindle-override <= mpg.override.spindle.counts
+net spindle-override => halui.spindle.0.override.counts
+
+net override-feed-value <= halui.feed-override.value
+net override-feed-value => mpg.override.feed.value
+net override-rapid-value <= halui.rapid-override.value
+net override-rapid-value => mpg.override.rapid.value
+net override-spindle-value <= halui.spindle.0.override.value
+net override-spindle-value => mpg.override.spindle.value
+
+# --- MPG AXIS ZEROING (LONG PRESS) ---
+
+# =========================================================
+
+# 1. Invertujeme signál z Arduina (protože v klidu je TRUE)
+net arduino-raw-signal  arduino.din.16 => not.0.in
+net arduino-inverted    not.0.out     => or2.2.in1
+
+# 2. Ostatní zůstává stejné
+net is-manual => and2.0.in1 and2.1.in1 and2.2.in1 and2.3.in1
+
+# X, Y, Z
+net mpg-x-raw  mpg.button.01-long => and2.0.in0
+net mpg-zero-x and2.0.out         => halui.mdi-command-00
+
+net mpg-y-raw  mpg.button.02-long => and2.1.in0
+net mpg-zero-y and2.1.out         => halui.mdi-command-01
+
+net mpg-z-raw  mpg.button.03-long => and2.2.in0
+net mpg-zero-z and2.2.out         => halui.mdi-command-02
+
+# VŠECHNY OSY (Spojení MPG a invertovaného Arduina)
+net mpg-all-raw          mpg.button.sel04-long => or2.2.in0
+# or2.2.in1 už je napojen nahoře na not.0.out
+
+addf or2.2 servo-thread
+
+net any-zero-all-request or2.2.out      => and2.3.in0
+net mpg-zero-all         and2.3.out     => halui.mdi-command-03

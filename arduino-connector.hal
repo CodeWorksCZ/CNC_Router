@@ -1,0 +1,6 @@
+
+#switch 7 from arduino switches on the machine.
+net req-machine-on arduino.din.7 => halui.machine.on
+
+#controls first led on/off state
+net machine-on halui.machine.is-on => arduino.dled.0

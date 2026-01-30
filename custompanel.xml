@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pyvcp>
+<!-- 
+Include your PyVCP panel here.
+The contents of this file will not be overwritten when you run stepconf again.
+-->
+
+<vbox>
+    <button><halpin>"zero_all"</halpin><text>"Zero ALL"</text></button>
+    <button><halpin>"zero_x"</halpin><text>"Zero X"</text></button>
+    <button><halpin>"zero_y"</halpin><text>"Zero Y"</text></button>
+    <button><halpin>"zero_z"</halpin><text>"Zero Z"</text></button>
+  </vbox>
+
+</pyvcp>

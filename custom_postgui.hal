@@ -6,24 +6,28 @@
 # ---------------------------------------------------------
 # 1. EXTERNAL USER COMPONENTS (MPG & ARDUINO)
 # ---------------------------------------------------------
-loadusr -W  /home/cnc/mpg -d /dev/ttyACM0 -s  
+loadusr -W  /home/cnc/mpg -d /dev/ttyACM0 -s   
 loadusr -Wn arduino /home/cnc/arduino-connector -n arduino
 
 # ---------------------------------------------------------
 # 2. SYSTEM LOGIC & MODULES
 # ---------------------------------------------------------
-# Načtení RT komponent
-loadrt or2
-loadrt and2   count=8
-loadrt near   count=3
-loadrt mux2   names=mux_homing
+# Load RT components
+loadrt or2      count=5
+loadrt and2     count=11
+loadrt near     count=3
+loadrt mux2     names=mux_homing
 loadrt siggen
 loadrt debounce cfg=3
-loadrt oneshot count=1
-addf oneshot.0 servo-thread
+loadrt oneshot  count=2
+loadrt not      count=2
 
-# Přidání funkcí do servo-threadu
+# Add functions to servo-thread
 addf or2.0           servo-thread
+addf or2.1           servo-thread
+addf or2.2           servo-thread
+addf or2.3           servo-thread
+addf or2.4           servo-thread
 addf and2.0          servo-thread
 addf and2.1          servo-thread
 addf and2.2          servo-thread
@@ -32,17 +36,24 @@ addf and2.4          servo-thread
 addf and2.5          servo-thread
 addf and2.6          servo-thread
 addf and2.7          servo-thread
+addf and2.8          servo-thread
+addf and2.9          servo-thread
+addf and2.10         servo-thread
 addf near.0          servo-thread
 addf near.1          servo-thread
 addf near.2          servo-thread
+addf not.0           servo-thread
+addf not.1           servo-thread
 addf mux_homing      servo-thread
 addf siggen.0.update servo-thread
-addf debounce.0 servo-thread
+addf debounce.0      servo-thread
+addf oneshot.0       servo-thread
+addf oneshot.1       servo-thread
 
 # ---------------------------------------------------------
 # 3. E-STOP CONFIGURATION (Combined MPG + Arduino)
 # ---------------------------------------------------------
-# Sloučení dvou zdrojů E-stopu do jednoho signálu
+# Merging two E-stop sources into one signal
 net estop_mpg     mpg.button.estop   => or2.0.in0
 net estop_arduino arduino.din.5      => or2.0.in1
 net ext-estop     or2.0.out          => halui.estop.activate
@@ -50,57 +61,51 @@ net ext-estop     or2.0.out          => halui.estop.activate
 # ---------------------------------------------------------
 # 4. SPINDLE & STATUS DISPLAYS
 # ---------------------------------------------------------
-# RPM Display a zpětná vazba
+# RPM Display and Feedback
 net spindle-cmd-rpm     gmoccapy.spindle_feedback_bar
 net spindle-cmd-rpm     <= mpg.spindle.speed
 
-# Stavové LED
+# Status LEDs
 net spindle-status      <= spindle.0.forward
 net spindle-timer       gmoccapy.spindle_at_speed_led
 
-# Stav stroje a programu
+# Machine and Program Status
 net machine-on          halui.machine.is-on      => mpg.machine.is-on
 net machine-on          => arduino.dled.0
-net program-rnning      halui.program.is-running => mpg.program.is-running
+net program-running     halui.program.is-running => mpg.program.is-running
 
 # ---------------------------------------------------------
 # 5. JOGGING & AXIS CONTROL (X, Y, Z)
 # ---------------------------------------------------------
-# Globální měřítko Jogování
+# Global Jog Scale
 net external-jog-scale-value <= mpg.jog-scale
 
-# --- Osa X ---
+# --- Axis X ---
 setp joint.0.jog-vel-mode    1
 setp joint.0.jog-enable      1
 setp axis.x.jog-vel-mode     1
 setp axis.x.jog-enable       1
-net external-jog-scale-value => joint.0.jog-scale
-net external-jog-scale-value => axis.x.jog-scale
+net external-jog-scale-value => joint.0.jog-scale axis.x.jog-scale
 net axis_x_jog-counts        <= mpg.axis.x.jog-counts
-net axis_x_jog-counts        => axis.x.jog-counts
-net axis_x_jog-counts        => joint.0.jog-counts
+net axis_x_jog-counts        => axis.x.jog-counts joint.0.jog-counts
 
-# --- Osa Y ---
+# --- Axis Y ---
 setp joint.1.jog-vel-mode    1
 setp joint.1.jog-enable      1
 setp axis.y.jog-vel-mode     1
 setp axis.y.jog-enable       1
-net external-jog-scale-value => joint.1.jog-scale
-net external-jog-scale-value => axis.y.jog-scale
+net external-jog-scale-value => joint.1.jog-scale axis.y.jog-scale
 net axis_y_jog-counts        <= mpg.axis.y.jog-counts
-net axis_y_jog-counts        => axis.y.jog-counts
-net axis_y_jog-counts        => joint.1.jog-counts
+net axis_y_jog-counts        => axis.y.jog-counts joint.1.jog-counts
 
-# --- Osa Z ---
+# --- Axis Z ---
 setp joint.2.jog-vel-mode    1
 setp joint.2.jog-enable      1
 setp axis.z.jog-vel-mode     1
 setp axis.z.jog-enable       1
-net external-jog-scale-value => joint.2.jog-scale
-net external-jog-scale-value => axis.z.jog-scale
+net external-jog-scale-value => joint.2.jog-scale axis.z.jog-scale
 net axis_z_jog-counts        <= mpg.axis.z.jog-counts
-net axis_z_jog-counts        => axis.z.jog-counts
-net axis_z_jog-counts        => joint.2.jog-counts
+net axis_z_jog-counts        => axis.z.jog-counts joint.2.jog-counts
 
 # ---------------------------------------------------------
 # 6. MPG DISPLAY FEEDBACK (DRO)
@@ -112,21 +117,21 @@ net display_z halui.axis.z.pos-relative => mpg.axis.z.pos
 # ---------------------------------------------------------
 # 7. OVERRIDES (Feed, Rapid, Spindle)
 # ---------------------------------------------------------
-# Feed Override (Posuv)
+# Feed Override
 setp halui.feed-override.scale 0.01
 net feed-override           <= mpg.override.feed.counts
 net feed-override           => halui.feed-override.counts
 net override-feed-value     <= halui.feed-override.value
 net override-feed-value     => mpg.override.feed.value
 
-# Rapid Override (Rychloposuv)
+# Rapid Override
 setp halui.rapid-override.scale 0.01
 net rapid-override          <= mpg.override.rapid.counts
 net rapid-override          => halui.rapid-override.counts
 net override-rapid-value    <= halui.rapid-override.value
 net override-rapid-value    => mpg.override.rapid.value
 
-# Spindle Override (Otáčky)
+# Spindle Override
 setp halui.spindle.0.override.scale 0.01
 net spindle-override        <= mpg.override.spindle.counts
 net spindle-override        => halui.spindle.0.override.counts
@@ -134,97 +139,140 @@ net override-spindle-value  <= halui.spindle.0.override.value
 net override-spindle-value  => mpg.override.spindle.value
 
 # ---------------------------------------------------------
-# 8. Homing & Zeroing (MDI Commands)
+# 8. HOMING & ZEROING (MDI Commands)
 # ---------------------------------------------------------
 
 # --- Arduino HOME-ALL ---
-# 1. Přepnutí do Joint Mode + 2. Spuštění Home All
-net home-all-btn      arduino.din.8           => halui.mode.joint
-net home-all-btn      => halui.home-all
+# 1. Switch to Joint Mode + 2. Execute Home All
+net home-all-btn      arduino.din.8           => halui.mode.joint halui.home-all
 
-# LED indikace dokončeného homingu
+# LED indication for Home status
 net machine-is-homed  motion.is-all-homed     => arduino.dled.6
 
-# Podmínka pro nulování: Pouze v manuálním režimu
+# Zeroing Condition: Only in Manual Mode
 net is-manual         halui.mode.is-manual
 
-# --- Vynulování jednotlivých os (Dlouhý stisk MPG) ---
+# --- Individual Axis Zeroing (Long Press on MPG) ---
 # X Zero
-net mpg-x-raw         mpg.button.01-long      => and2.0.in0
-net is-manual         => and2.0.in1
-net mpg-zero-x        and2.0.out              => halui.mdi-command-00
+net mpg-x-raw    mpg.button.01-long => and2.0.in0
+net is-manual    => and2.0.in1
+net mpg-zero-x   and2.0.out         => halui.mdi-command-00
 
 # Y Zero
-net mpg-y-raw         mpg.button.02-long      => and2.1.in0
-net is-manual         => and2.1.in1
-net mpg-zero-y        and2.1.out              => halui.mdi-command-01
+net mpg-y-raw    mpg.button.02-long => and2.1.in0
+net is-manual    => and2.1.in1
+net mpg-zero-y   and2.1.out         => halui.mdi-command-01
 
 # Z Zero
-net mpg-z-raw         mpg.button.03-long      => and2.2.in0
-net is-manual         => and2.2.in1
-net mpg-zero-z        and2.2.out              => halui.mdi-command-02
+net mpg-z-raw    mpg.button.03-long => and2.2.in0
+net is-manual    => and2.2.in1
+net mpg-zero-z   and2.2.out         => halui.mdi-command-02
 
-# --- Vynulování všech os najednou (Arduino tlačítko) ---
-net mpg-all-raw       arduino.din.16          => and2.3.in0
-net is-manual         => and2.3.in1
-net mpg-zero-all      and2.3.out              => halui.mdi-command-03
+# --- Zero All Axes (Arduino Button) ---
+net mpg-all-raw  arduino.din.16     => and2.3.in0
+net is-manual    => and2.3.in1
+net mpg-zero-all and2.3.out         => halui.mdi-command-03
 
 # ---------------------------------------------------------
 # 9. ZERO STATUS INDICATION (LED indicator)
 # ---------------------------------------------------------
-# Nastavení tolerance pro detekci nuly (0.01 mm)
+# Set tolerance for zero detection (0.01 mm)
 setp near.0.difference 0.01
 setp near.1.difference 0.01
 setp near.2.difference 0.01
 
-# Vstupy pro detekci nuly
-net display_x         => near.0.in1
-setp near.0.in2       0
-net display_y         => near.1.in1
-setp near.1.in2       0
-net display_z         => near.2.in1
-setp near.2.in2       0
+# Inputs for zero detection
+net display_x    => near.0.in1
+setp near.0.in2  0
+net display_y    => near.1.in1
+setp near.1.in2  0
+net display_z    => near.2.in1
+setp near.2.in2  0
 
-# Logická kaskáda kontroly nulové pozice (X && Y && Z)
-net x-is-zero         near.0.out              => and2.4.in0
-net y-is-zero         near.1.out              => and2.4.in1
-net xy-is-zero        and2.4.out              => and2.5.in0
-net z-is-zero         near.2.out              => and2.5.in1
+# Logic cascade for Zero Position check (X && Y && Z)
+net x-is-zero    near.0.out  => and2.4.in0
+net y-is-zero    near.1.out  => and2.4.in1
+net xy-is-zero   and2.4.out  => and2.5.in0
+net z-is-zero    near.2.out  => and2.5.in1
 
-# Rozsvícení LED na Arduinu (pin 3), pokud jsou všechny osy v nule
-net all-axes-at-zero  and2.5.out              => arduino.dled.3
+# Light up LED on Arduino (pin 3) if all axes are at zero
+net all-axes-at-zero and2.5.out => arduino.dled.3
 
-# --- Ovládání programu (Start, Pause, Stop) ---
+# ---------------------------------------------------------
+# 10. PROGRAM CONTROL (Start, Pause, Stop)
+# ---------------------------------------------------------
 
-setp oneshot.0.width 0.1
-
-# --- DEBOUNCE FILTR PRO TLAČÍTKA ---
+# --- DEBOUNCE FILTER FOR BUTTONS ---
+setp debounce.0.delay 20
 net raw-start  arduino.din.6  => debounce.0.0.in
 net raw-pause  arduino.din.7  => debounce.0.1.in
 net raw-stop   arduino.din.10 => debounce.0.2.in
 
-# --- UPRAVENÉ OVLÁDÁNÍ PROGRAMU ---
+# ---------------------------------------------------------
+# CYCLE START button = RUN or TOOL CHANGE confirmation (M6)
+# ---------------------------------------------------------
 
-# Nastavení pro všechny 3 kanály (Start, Pause, Stop)
-setp debounce.0.delay 20
-# CYCLE START (Teď používá čistý signál z debounce)
-net clean-start  debounce.0.0.out => halui.program.run
+# Short pulse from START button
+setp oneshot.1.width 0.1
+net clean-start  debounce.0.0.out => oneshot.1.in
+net start-pulse  oneshot.1.out
 
-# --- Inteligentní PAUSE / RESUME s ochranou proti držení ---
+# Tool-change signal handling
+net tool-change  => not.0.in
+net tc-not       not.0.out
 
-# 1. Signál z tlačítka (po debounce) jde do oneshot
+# IF NOT tool-change -> RUN
+net start-pulse  => and2.9.in0
+net tc-not       => and2.9.in1
+net run-pulse    and2.9.out => halui.program.run
+
+# IF tool-change -> ACK (Continue)
+net start-pulse  => and2.10.in0
+net tool-change  => and2.10.in1
+net tc-ack       and2.10.out => hal_manualtoolchange.change_button
+
+# --- Intelligent PAUSE / RESUME with holding protection ---
+
+# 1. Button signal (after debounce) goes to oneshot
+setp oneshot.0.width 0.1
 net clean-pause  debounce.0.1.out => oneshot.0.in
 
-# 2. Výstup z oneshot (krátký puls) jde do logiky místo tlačítka
-net pause-pulse  oneshot.0.out => and2.6.in0 and2.7.in0
+# 2. Oneshot output (short pulse) goes to logic
+net pause-pulse  oneshot.0.out    => and2.6.in0 and2.7.in0
 
-# 3. Logika pro PAUSE (zůstává stejná, jen s novým vstupem)
-net program-rnning   => and2.6.in1
-net do-pause         and2.6.out => halui.program.pause
+# 3. Logic for PAUSE
+net program-running => and2.6.in1
+net do-pause        and2.6.out    => halui.program.pause
 
-# 4. Logika pro RESUME (zůstává stejná, jen s novým vstupem)
-net is-paused        halui.program.is-paused => and2.7.in1
-net do-resume        and2.7.out => halui.program.resume
+# 4. Logic for RESUME
+net is-paused       halui.program.is-paused => and2.7.in1
+net do-resume       and2.7.out    => halui.program.resume
 
-# STOP (Teď používá čistý signál z debounce)
-net clean-stop   debounce.0.2.out => halui.program.stop
+# STOP (Uses clean signal from debounce)
+net clean-stop      debounce.0.2.out => halui.program.stop
+
+# ---------------------------------------------------------
+# 11. LED SIGNALIZATION
+# ---------------------------------------------------------
+# Program Status LEDs
+net program-running => arduino.dled.1
+net is-paused       => arduino.dled.4
+
+# STOP LED = ext-estop OR is-paused
+net ext-estop       => or2.1.in0
+net is-paused       => or2.1.in1
+net stop-attn       or2.1.out => arduino.dled.5
+
+# ---------------------------------------------------------
+# LIMIT SWITCH ACTIVE -> RED LED
+# Sources: both-home-x, both-home-y2, max-home-z
+# ---------------------------------------------------------
+
+# XY = X OR Y
+net both-home-x     => or2.2.in0
+net both-home-y2    => or2.2.in1
+net xy-limit        or2.2.out => or2.3.in0
+
+# ANY = (XY) OR Z
+net max-home-z      => or2.3.in1
+net any-limit       or2.3.out => arduino.dled.2

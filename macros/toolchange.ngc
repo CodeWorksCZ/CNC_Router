@@ -1,0 +1,29 @@
+o<toolchange> sub
+
+(MSG, Vymen nastroj a stiskni Cycle Start)
+
+G53 G0 Z0
+G53 G0 X0 Y0
+
+M0
+
+( pozice sondy )
+G53 G0 X200 Y200
+
+( probing )
+G91
+G38.2 Z-50 F200
+G0 Z2
+G38.2 Z-5 F20
+G90
+
+#<touch_z> = #5063
+#<probe_ref> = -150
+#<tool_length> = [#<probe_ref> - #<touch_z>]
+
+G10 L1 P#<_selected_tool> Z#<tool_length>
+
+G53 G0 Z0
+
+o<toolchange> endsub
+M2

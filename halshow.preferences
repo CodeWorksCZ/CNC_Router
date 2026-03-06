@@ -5,21 +5,31 @@ placeFrames 0.22179732313575526
 set ::ratio 0.22179732313575526
 set ::old_w_leftf 370
 set ::watchlist {
-    pin+arduino.din.10
-    pin+arduino.din.16
-    pin+arduino.din.5
-    pin+arduino.din.6
-    pin+arduino.din.7
-    pin+arduino.din.8
-    pin+arduino.din.9
-    pin+arduino.dled.0
-    pin+arduino.dled.1
-    pin+arduino.dled.2
-    pin+arduino.dled.3
-    pin+arduino.dled.4
-    pin+arduino.dled.5
-    pin+arduino.dled.6
-    pin+arduino.dled.7
+    sig+spindle-timer
+    sig+spindle-status
+    sig+spindle-on
+    pin+spindle.0.amp-fault-in
+    pin+spindle.0.at-speed
+    pin+spindle.0.brake
+    pin+spindle.0.forward
+    pin+spindle.0.index-enable
+    pin+spindle.0.inhibit
+    pin+spindle.0.is-oriented
+    pin+spindle.0.locked
+    pin+spindle.0.on
+    pin+spindle.0.orient
+    pin+spindle.0.orient-angle
+    pin+spindle.0.orient-fault
+    pin+spindle.0.orient-mode
+    pin+spindle.0.reverse
+    pin+spindle.0.revs
+    pin+spindle.0.speed-cmd-rps
+    pin+spindle.0.speed-in
+    pin+spindle.0.speed-out
+    pin+spindle.0.speed-out-abs
+    pin+spindle.0.speed-out-rps
+    pin+spindle.0.speed-out-rps-abs
+    pin+timedelay.0.out
 }
 set ::workmode watchhal
 set ::watchInterval 100

@@ -38,7 +38,10 @@ net spindle-cmd-rps-abs <= spindle.0.speed-out-rps-abs
 #spindle at speed - Delay 10s
 loadrt timedelay count=1
 addf timedelay.0 servo-thread
+
 setp timedelay.0.on-delay 10
+setp timedelay.0.off-delay 0
+
 net spindle-on => timedelay.0.in
 net spindle-timer <= timedelay.0.out
 net spindle-timer => spindle.0.at-speed

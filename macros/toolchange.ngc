@@ -2,13 +2,13 @@ o<toolchange> sub
 
 (MSG, Vymen nastroj a stiskni Cycle Start)
 
-G53 G0 Z0
-G53 G0 X0 Y0
+G53 G0 Z-5
+G53 G0 X10 Y10
 
 M0
 
 ( pozice sondy )
-G53 G0 X200 Y200
+G53 G0 X23 Y44
 
 ( probing )
 G91

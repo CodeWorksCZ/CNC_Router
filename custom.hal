@@ -1,8 +1,8 @@
 # Include your custom HAL commands here
 # This file will not be overwritten when you run stepconf again
 
-setp pwmgen.0.pwm-freq 100.0
-setp pwmgen.0.scale 22803
-setp pwmgen.0.offset 0
+#setp pwmgen.0.pwm-freq 100.0#
+#setp pwmgen.0.scale 22803
+#setp pwmgen.0.offset 0
 
 

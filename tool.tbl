@@ -1,5 +1,5 @@
-T1   P1   D+1.000000 Z-36.638333 ;1mm end mill in 3.175 collet 
+T1   P1   D+1.000000 Z-29.549667 ;1mm end mill in 3.175 collet 
 T2   P2   D+1.200000 Z-36.652800 ;1.2mm  in 3.175 collet 
-T3   P3   D+0.201000 ;#7 tap drill 
+T3   P3   D+0.201000 Z-37.910833 ;#7 tap drill 
 T99999 P123 Z+0.100000 ;big tool number 
 T4   P4   D+3.175000 ;comment 

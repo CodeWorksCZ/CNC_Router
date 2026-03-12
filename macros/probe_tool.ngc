@@ -1,0 +1,41 @@
+O<toolchange> sub
+(--- NAČTENÍ HODNOT Z INI SOUBORU ---)
+  #<probe_x> = #<_ini[TOOL_SENSOR]X>
+  #<probe_y> = #<_ini[TOOL_SENSOR]Y>
+  #<probe_z_safe> = #<_ini[TOOL_SENSOR]Z>
+  #<probe_feed> = #<_ini[TOOL_SENSOR]SEARCH_VEL>
+  #<latch_feed> = #<_ini[TOOL_SENSOR]PROBE_VEL>
+
+  
+
+  G90                     (Absolutní režim - nutné pro G53)
+  
+  (1. ODJEZD NA MÍSTO VÝMĚNY)
+  G53 G0 Z-2              (Vždy nejdřív nahoru!)
+  G53 G0 X10 Y10          (Místo, kde fyzicky měníte frézu)
+
+  (2. VYVOLÁNÍ DIALOGU VÝMĚNY)
+  (iM6 spustí vestavěné okno 'Insert tool' a počká na potvrzení)
+  iM6
+
+  (3. PŘEJEZD NAD TOOL SETTER)
+  G53 G0 X#<probe_x> Y#<probe_y>
+  G53 G0 Z#<probe_z_safe>
+
+  (4. PRVNÍ RYCHLÉ SONDOVÁNÍ)
+  G91                     (Přepnutí na inkrementální pohyb pro sondu)
+  G38.2 Z-100 F#<probe_feed>
+  
+  (5. ODCHYLKA A PŘESNÝ DOTEK)
+  G0 Z2                   (Odskok o 2mm nahoru)
+  G38.2 Z-5 F#<latch_feed> (Pomalý dotek pro přesnost)
+  
+  (6. ZÁPIS DÉLKY NÁSTROJE)
+  (G10 L11 nastaví offset nástroje tak, aby aktuální pozice byla Z0)
+  G10 L11 P#<tool> Z0
+  
+  (7. NÁVRAT A ÚKLID)
+  G90                     (Zpět do absolutních souřadnic)
+  G53 G0 Z0               (Odjezd vřetena úplně nahoru)
+O<toolchange> endsub
+M2

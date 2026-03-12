@@ -1,29 +1,34 @@
 o<toolchange> sub
 
-(MSG, Vymen nastroj a stiskni Cycle Start)
+; 1. OCHRANA NÁHLEDU
+O100 if [#<_task> EQ 0]
+    O100 return [999]
+O100 endif
 
-G53 G0 Z-5
+; 2. ZRUŠENÍ KOREKCE (To co ti pomohlo v MDI)
+G49
+
+; 3. ODJEZD NA POZICI VÝMĚNY
+G90 G53 G0 Z-6
 G53 G0 X10 Y10
 
-M0
+; 4. VÝMĚNA (M6 vyvolá okno)
+M6
 
-( pozice sondy )
-G53 G0 X23 Y44
+; 5. PŘEJEZD NAD SETTER
+G90 G53 G0 X23.0 Y44.0
+G53 G0 Z-9.0
 
-( probing )
+; 6. MĚŘENÍ A ZÁPIS
 G91
-G38.2 Z-50 F200
-G0 Z2
-G38.2 Z-5 F20
+G38.2 Z-100 F100
+G0 Z2.0
+G38.2 Z-5 F10
 G90
 
-#<touch_z> = #5063
-#<probe_ref> = -150
-#<tool_length> = [#<probe_ref> - #<touch_z>]
+G10 L11 P#<selected_tool> Z0
+G43 (Znovu aktivujeme korekci pro nový nástroj)
 
-G10 L1 P#<_selected_tool> Z#<tool_length>
-
-G53 G0 Z0
-
-o<toolchange> endsub
-M2
+; 7. UKONČENÍ
+G53 G0 Z-6
+o<toolchange> endsub [1]

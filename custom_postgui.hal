@@ -276,3 +276,6 @@ net xy-limit        or2.2.out => or2.3.in0
 # ANY = (XY) OR Z
 net max-home-z      => or2.3.in1
 net any-limit       or2.3.out => arduino.dled.2
+
+net tooloffset-x gmoccapy.tooloffset-x <= motion.tooloffset.x
+net tooloffset-z gmoccapy.tooloffset-z <= motion.tooloffset.z

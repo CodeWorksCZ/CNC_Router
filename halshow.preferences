@@ -28,6 +28,20 @@ set ::watchlist {
     pin+motion.program-line
     pin+halui.program.is-idle
     pin+halui.program.is-running
+    pin+gmoccapy.tooloffset-x
+    pin+gmoccapy.tooloffset-z
+    pin+motion.tooloffset.a
+    pin+motion.tooloffset.c
+    pin+motion.tooloffset.u
+    pin+motion.tooloffset.v
+    pin+motion.tooloffset.w
+    pin+motion.tooloffset.y
+    pin+motion.tooloffset.z
+    pin+gmoccapy.toolmeasurement
+    pin+gmoccapy.toolchange-number
+    pin+gmoccapy.toolchange-confirm
+    pin+gmoccapy.toolchange-change
+    pin+gmoccapy.tool-diameter
 }
 set ::workmode watchhal
 set ::watchInterval 100

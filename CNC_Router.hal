@@ -51,9 +51,9 @@ addf timedelay.0              servo-thread
 # 3. SPINDLE CONFIGURATION (PWM & TIMING)
 # ---------------------------------------------------------
 # PWM Settings for Spindle Speed Controller (VFD)
-setp pwmgen.0.pwm-freq        100.0
-setp pwmgen.0.scale           1166.6666666666665
-setp pwmgen.0.offset          0.11428571428571428
+setp pwmgen.0.pwm-freq 100.0
+setp pwmgen.0.scale 24552
+setp pwmgen.0.offset 0.0192
 setp pwmgen.0.dither-pwm      true
 
 # Spindle Control Signals

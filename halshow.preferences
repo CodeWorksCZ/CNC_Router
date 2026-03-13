@@ -1,49 +1,19 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1581x1132+1383+79
+wm geometry . 1024x685+1383+79
 placeFrames 0.22179732313575526
 set ::ratio 0.22179732313575526
 set ::old_w_leftf 370
 set ::watchlist {
-    pin+iocontrol.0.coolant-flood
-    pin+iocontrol.0.coolant-mist
-    pin+iocontrol.0.emc-enable-in
-    pin+iocontrol.0.lube
-    pin+iocontrol.0.lube_level
-    pin+iocontrol.0.tool-change
-    pin+iocontrol.0.tool-changed
-    pin+iocontrol.0.tool-from-pocket
-    pin+iocontrol.0.tool-number
-    pin+iocontrol.0.tool-prep-index
-    pin+iocontrol.0.tool-prep-number
-    pin+iocontrol.0.tool-prep-pocket
-    pin+iocontrol.0.tool-prepare
-    pin+iocontrol.0.tool-prepared
-    pin+iocontrol.0.user-enable-out
-    pin+iocontrol.0.user-request-enable
-    pin+hal_manualtoolchange.change
-    pin+hal_manualtoolchange.change_button
-    pin+hal_manualtoolchange.changed
-    pin+hal_manualtoolchange.number
-    pin+motion.program-line
-    pin+halui.program.is-idle
-    pin+halui.program.is-running
-    pin+gmoccapy.tooloffset-x
-    pin+gmoccapy.tooloffset-z
-    pin+motion.tooloffset.a
-    pin+motion.tooloffset.c
-    pin+motion.tooloffset.u
-    pin+motion.tooloffset.v
-    pin+motion.tooloffset.w
-    pin+motion.tooloffset.y
-    pin+motion.tooloffset.z
-    pin+gmoccapy.toolmeasurement
-    pin+gmoccapy.toolchange-number
-    pin+gmoccapy.toolchange-confirm
-    pin+gmoccapy.toolchange-change
-    pin+gmoccapy.tool-diameter
+    pin+mpg.override.feed.counts
+    pin+mpg.override.feed.value
+    pin+mpg.override.rapid.counts
+    pin+mpg.override.rapid.value
+    pin+mpg.override.spindle.counts
+    pin+mpg.override.spindle.value
+    pin+mpg.axis.a.pos
 }
-set ::workmode watchhal
+set ::workmode settings
 set ::watchInterval 100
 set ::col1_width 100
 set ::ffmts 

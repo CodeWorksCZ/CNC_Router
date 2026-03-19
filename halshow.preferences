@@ -12,8 +12,9 @@ set ::watchlist {
     pin+mpg.override.spindle.counts
     pin+mpg.override.spindle.value
     pin+mpg.axis.a.pos
+    pin+motion.probe-input
 }
-set ::workmode settings
+set ::workmode watchhal
 set ::watchInterval 100
 set ::col1_width 100
 set ::ffmts 

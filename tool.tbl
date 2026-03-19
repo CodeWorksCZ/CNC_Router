@@ -1,7 +1,13 @@
-T1   P1   D+0.800000 Z-29.549667 ;0.8mm end mill in 3.175 collet 
-T2   P1   D+1.000000 Z-29.549667 ;1.0mm end mill in 3.175 collet 
-T3   P2   D+1.200000 Z-35.816667 ;1.2mm  in 3.175 collet 
-T4   P3   D+0.201000 Z-37.910833 ;#7 tap drill 
-T5   P4   D+3.175000 Z-35.689167 ;comment 
-T99999 P123 Z+0.100000 ;big tool number 
-
+T1 P1 Z0.0000 D0.8000 ; Drillpro DB-M4 0.8mm | preset: Default Preset
+T2 P2 Z0.0000 D3.1750 ; 10pcs 3.175mm Shank Carbide Milling Cutter CNC 4 Flute Spiral Bit End Mill CEL 15mm | preset: Default Preset
+T3 P3 Z0.0000 D3.1750 ; ball end mill | preset: Default preset
+T4 P4 Z0.0000 D1.0000 ; flat end mill | presets: Balsa and Soft Ply 1, Ply Hard 2.5mm, 3mm Balsa & 0.6Ply, Cuprexit 1.6mm, Balsa 3mm
+T5 P5 Z0.0000 D3.1750 ; 3.175mm Single Flute End Mill Cutter Carbide CNC Router Bit | preset: Default preset
+T6 P6 Z0.0000 D1.5000 ; END MILL 4FHSS 1.5 | preset: Default preset
+T7 P7 Z0.0000 D2.0000 ; END MILL 4FHSS 2.0 | preset: Default preset
+T8 P8 Z0.0000 D2.5000 ; END MILL 4FHSS 2.5 | preset: Default preset
+T9 P9 Z0.0000 D3.0000 ; END MILL 4FHSS 3.0 | preset: Default preset
+T10 P10 Z0.0000 D4.0000 ; END MILL 4FHSS 4.0 | preset: Default preset
+T11 P11 Z0.0000 D5.0000 ; END MILL 4FHSS 5.0 | preset: Default preset
+T12 P12 Z0.0000 D6.0000 ; END MILL 4FHSS 6.0 | preset: Default preset
+T13 P13 Z0.0000 D25.3000 ; face mill | preset: Default preset

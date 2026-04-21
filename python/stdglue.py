@@ -668,5 +668,3 @@ def tool_probe_m6(self, **words):
         self.set_errormsg("tool_probe_m6 remap error." )
         yield INTERP_ERROR
 
-
-

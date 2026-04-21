@@ -1,43 +1,83 @@
 o<toolchange> sub
 
-
-
 ; 1. OCHRANA NÁHLEDU
-O100 if [#<_task> EQ 0]
-    O100 return [999]
-O100 endif
+o100 if [#<_task> EQ 0]
+    o100 return [999]
+o100 endif
 
-(--- KONTROLA PŘED MĚŘENÍM ---)
-O200 if [#<_hal[motion.probe-input]> NE 0]
+; 2. ULOŽENÍ AKTUÁLNÍ POZICE
+#<return_x> = #5420
+#<return_y> = #5421
+#<return_z> = #5422
+#<old_offset_z> = #5403
+
+; 3. KONTROLA – STEJNÝ NÁSTROJ
+o105 if [#<selected_tool> EQ #<tool_in_spindle>]
+    (MSG, Nastroj T#<selected_tool> je jiz vlozeny. Probehne jen premereni na setteru.)
+o105 endif
+
+; 4. KONTROLA SONDY
+o110 if [#<_hal[motion.probe-input]> NE 0]
     (MSG, CHYBA: Sonda je jiz sepnuta! Ocistete setter.)
-    M2 (Okamzite zastaveni)
-O200 endif
+    o<toolchange> return [-1]
+o110 endif
 
-; 2. ZRUŠENÍ KOREKCE (To co ti pomohlo v MDI)
+; 5. ZRUŠENÍ KOREKCE DÉLKY
 G49
 
-; 3. ODJEZD NA POZICI VÝMĚNY
-G90 G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
-G53 G0 X[#<_ini[CHANGE_POSITION]X>] Y[#<_ini[CHANGE_POSITION]Y>]
-
-; 4. VÝMĚNA (M6 vyvolá okno)
-M6
-
-
-; 5. PŘEJEZD NAD SETTER
-G90 G53 G0 X[#<_ini[TOOLSENSOR]X>] Y[#<_ini[TOOLSENSOR]Y>]
+; 6. ZMERENI AKTUALNIHO NASTROJE PRED VYMENOU
+G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
+G53 G0 X[#<_ini[TOOLSENSOR]X>] Y[#<_ini[TOOLSENSOR]Y>]
 G53 G0 Z[#<_ini[TOOLSENSOR]Z>]
 
-; 6. MĚŘENÍ A ZÁPIS
+; 7. MĚŘENÍ STARÉHO NÁSTROJE – hrubé
 G91
 G38.2 Z[#<_ini[TOOLSENSOR]MAX_PROBE>] F[#<_ini[TOOLSENSOR]SEARCH_VEL>]
 G0 Z3.0
+
+; 8. MĚŘENÍ STARÉHO NÁSTROJE – přesné
 G38.2 Z-5 F[#<_ini[TOOLSENSOR]PROBE_VEL>]
 G90
+#<old_touch_z> = #5063
 
-G10 L11 P#<selected_tool> Z0
-G43 (Znovu aktivujeme korekci pro nový nástroj)
+; 9. VYMENA jen pokud je vybran jiny nastroj
+o120 if [#<selected_tool> NE #<tool_in_spindle>]
+    G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
+    G53 G0 X[#<_ini[CHANGE_POSITION]X>] Y[#<_ini[CHANGE_POSITION]Y>]
+    M6
 
-; 7. UKONČENÍ
+    G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
+    G53 G0 X[#<_ini[TOOLSENSOR]X>] Y[#<_ini[TOOLSENSOR]Y>]
+    G53 G0 Z[#<_ini[TOOLSENSOR]Z>]
+o120 endif
+
+; 10. MĚŘENÍ NOVÉHO/AKTUÁLNÍHO NÁSTROJE – hrubé
+G91
+G38.2 Z[#<_ini[TOOLSENSOR]MAX_PROBE>] F[#<_ini[TOOLSENSOR]SEARCH_VEL>]
+G0 Z3.0
+
+; 11. MĚŘENÍ NOVÉHO/AKTUÁLNÍHO NÁSTROJE – přesné
+G38.2 Z-5 F[#<_ini[TOOLSENSOR]PROBE_VEL>]
+G90
+#<new_touch_z> = #5063
+
+; 12. VYPOCET NOVE KOREKCE
+o130 if [#<selected_tool> EQ #<tool_in_spindle>]
+    #<new_offset_z> = #<old_offset_z>
+o130 else
+    #<new_offset_z> = [#<old_offset_z> + [#<new_touch_z> - #<old_touch_z>]]
+o130 endif
+
+; 13. ZAPIS DELKY NASTROJE
+G10 L1 P#<selected_tool> Z#<new_offset_z>
+
+; 14. NÁVRAT NA PŮVODNÍ XY bez aktivní korekce
 G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
+G90 G0 X#<return_x> Y#<return_y>
+
+; 15. Aktivace korekce a finalni navrat Z na puvodni pracovni vysku
+G43 H#<selected_tool>
+G0 Z#<return_z>
+
 o<toolchange> endsub [1]
+M2

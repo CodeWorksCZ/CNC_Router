@@ -13,7 +13,8 @@ o100 endif
 
 ; 3. KONTROLA – STEJNÝ NÁSTROJ
 o105 if [#<selected_tool> EQ #<tool_in_spindle>]
-    (MSG, Nastroj T#<selected_tool> je jiz vlozeny. Probehne jen premereni na setteru.)
+    (MSG, Nastroj T#<selected_tool> je jiz vlozeny. Resume = zmerit na setteru.)
+    M0
 o105 endif
 
 ; 4. KONTROLA SONDY
@@ -75,8 +76,14 @@ G10 L1 P#<selected_tool> Z#<new_offset_z>
 G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
 G90 G0 X#<return_x> Y#<return_y>
 
-; 15. Aktivace korekce a finalni navrat Z na puvodni pracovni vysku
+; 15. Po G43 se muze zmenit pracovni Z jen kvuli nove delce nastroje.
+; Tady ho vratime na stejnou hodnotu, jakou mel pred aktivaci offsetu.
+#<z_before_g43> = #5422
 G43 H#<selected_tool>
+#<z_after_g43> = #5422
+G10 L20 P0 Z#<z_before_g43>
+
+; 16. Finalni navrat Z na puvodni pracovni vysku
 G0 Z#<return_z>
 
 o<toolchange> endsub [1]

@@ -1,7 +1,7 @@
-T1   P1   D+0.800000 Z-33.386976 ;Drillpro DB-M4 0.8m 
+T1   P1   D+0.800000 Z-33.153749 ;Drillpro DB-M4 0.8m 
 T2   P2   D+3.175000 Z-33.153747 ;4 Flute Spiral 
 T3   P3   D+3.175000 Z+38.839879 ;ball end mill 
-T4   P4   D+1.000000 Z+0.040818 ;flat end mill 
+T4   P4   D+1.000000 Z-33.153748 ;flat end mill 
 T5   P5   D+3.175000 ;single Flute End Mill Cutter
 T6   P6   D+1.500000 ;END MILL 4FHSS 1.5
 T7   P7   D+2.000000 ;END MILL 4FHSS 2.0

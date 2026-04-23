@@ -1,13 +1,8 @@
-; Zero ALL axes (X, Y, Z) of the current work offset (G54)
-
-O<zero_all> sub
-
-    (Make sure we are in absolute mode and using G54)
-    G90
-    G54
-
-    ; Set current position as X0 Y0 Z0 in the current work offset
-    G10 L20 P0 X0 Y0 Z0
-
-O<zero_all> endsub
+o<zero_all> sub
+    G10 L20 P0 X0 Y0 Z0       ; Vynuluje souřadnice
+    G10 L1 P#5400 Z0          ; Vynuluje délku aktuálního nástroje v tabulce
+    G43                       ; Aktivuje tu nulovou délku
+    #<_first_tool_measured> = 0 ; Resetuje náš příznak pro měření
+    (MSG, System vynulovan a pripraven)
+o<zero_all> endsub
 M2

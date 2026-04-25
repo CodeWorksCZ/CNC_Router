@@ -1,13 +1,9 @@
 o<toolchange> sub
 
-; 1. OCHRANA NÁHLEDU (LinuxCNC preview)
+; 1. OCHRANA NÁHLEDU
 o100 if [#<_task> EQ 0]
     o100 return [999]
 o100 endif
-
-; --- DEBUG INFORMACE ---
-(DEBUG, Spustena vymena: Vreteno=T#<tool_in_spindle> , Pozadavek=T#<selected_tool>)
-(DEBUG, Priznak prvniho mereni: #<_first_tool_measured>)
 
 ; 2. ULOŽENÍ AKTUÁLNÍ POZICE A STAVU
 #<return_x> = #5420
@@ -18,9 +14,7 @@ o100 endif
 M5 ; Zastavit vřeteno
 
 ; 3. KONTROLA – STEJNÝ NÁSTROJ
-; Pokud je nástroj stejný, skript vypíše hlášku a okamžitě skončí (nebude měřit).
 o105 if [#<selected_tool> EQ #<tool_in_spindle>]
-    (DEBUG, Nastroj T#<selected_tool> jiz ve vretenu. Koncim bez mereni.)
     o<toolchange> endsub [1]
 o105 endif
 
@@ -31,38 +25,28 @@ o110 if [#<_hal[motion.probe-input]> NE 0]
 o110 endif
 
 ; 5. PŘÍPRAVA NA MĚŘENÍ
-G49 ; Zrušit korekci délky pro čisté měření
+G49 
 G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
 G53 G0 X[#<_ini[TOOLSENSOR]X>] Y[#<_ini[TOOLSENSOR]Y>]
 G53 G0 Z[#<_ini[TOOLSENSOR]Z>]
 
-; 6. MĚŘENÍ STARÉHO NÁSTROJE (nebo referenční bod)
-o106 if [#<_first_tool_measured> EQ 1]
-    (DEBUG, Merim stary nastroj T#<tool_in_spindle>...)
-    G91
-    G38.2 Z[#<_ini[TOOLSENSOR]MAX_PROBE>] F[#<_ini[TOOLSENSOR]SEARCH_VEL>]
-    G0 Z2.0
-    G38.2 Z-3.0 F[#<_ini[TOOLSENSOR]PROBE_VEL>]
-    #<old_touch_z> = #5063
-    G90
-o106 else
-    (DEBUG, Prvni beh: Beru aktualni nastroj jako referenci.)
-    G91
-    G38.2 Z[#<_ini[TOOLSENSOR]MAX_PROBE>] F[#<_ini[TOOLSENSOR]SEARCH_VEL>]
-    G0 Z2.0
-    G38.2 Z-3.0 F[#<_ini[TOOLSENSOR]PROBE_VEL>]
-    #<old_touch_z> = #5063
-    G90
-o106 endif
+; 6. MĚŘENÍ STARÉHO NÁSTROJE / REFERENCE
+; Merime vzdy, abychom ziskali aktualni mechanickou pozici vretena
+G91
+G38.2 Z[#<_ini[TOOLSENSOR]MAX_PROBE>] F[#<_ini[TOOLSENSOR]SEARCH_VEL>]
+G0 Z2.0
+G38.2 Z-3.0 F[#<_ini[TOOLSENSOR]PROBE_VEL>]
+#<old_touch_z> = #5063
+G90
 
 ; 7. VLASTNÍ VÝMĚNA (M6)
 G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
-G53 G0 X[#<_ini[CHANGE_POSITION]X>] Y[#<_ini[CHANGE_POSITION]Y>]
-(DEBUG, Vyzva k vymene nastroje...)
-M6
+o120 if [#<selected_tool> NE #<tool_in_spindle>]
+    G53 G0 X[#<_ini[CHANGE_POSITION]X>] Y[#<_ini[CHANGE_POSITION]Y>]
+    M6
+o120 endif
 
 ; 8. MĚŘENÍ NOVÉHO NÁSTROJE
-(DEBUG, Merim novy nastroj T#<selected_tool>...)
 G53 G0 X[#<_ini[TOOLSENSOR]X>] Y[#<_ini[TOOLSENSOR]Y>]
 G53 G0 Z[#<_ini[TOOLSENSOR]Z>]
 
@@ -75,7 +59,6 @@ G90
 
 ; 9. VÝPOČET A ZÁPIS KOREKCE
 #<new_offset_z> = [#<old_offset_z> + [#<new_touch_z> - #<old_touch_z>]]
-(DEBUG, Nova korekce pro T#<selected_tool> vypoctena: #<new_offset_z>)
 
 G10 L1 P#<selected_tool> Z#<new_offset_z>
 G43 H#<selected_tool>
@@ -88,5 +71,4 @@ G53 G0 Z[#<_ini[CHANGE_POSITION]Z>]
 G0 X#<return_x> Y#<return_y>
 G0 Z#<return_z>
 
-(DEBUG, Vymena nastroje T#<selected_tool> dokoncena.)
 o<toolchange> endsub [1]

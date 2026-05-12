@@ -15,6 +15,10 @@ o<relief_hole> sub
     #<start_z>     = 3
     #<near_z>      = 0.2
 
+      (ZERO CURRENT POSITION AS G54 X0 Y0 Z0)
+    G10 L20 P1 X0 Y0 Z0
+    G54
+
     #<r>       = [[#<hole_dia> / 2] - [#<tool_dia> / 2]]
     #<z_final> = [0 - #<mat_thick>]
     #<z_pre>   = [#<z_final> + 0.1]

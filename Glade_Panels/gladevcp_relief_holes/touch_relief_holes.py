@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# GMoccapy relief holes handler - no gtk.MessageDialog
+# Fixes gi.repository / static gtk dialog conflict.
+
 import linuxcnc
 import hal
-import gtk
+import time
 
 class HandlerClass:
     def __init__(self, halcomp, builder, useropts):
         self.halcomp = halcomp
         self.builder = builder
         self.command = linuxcnc.command()
+        self.stat = linuxcnc.stat()
 
         self.diameter = 20.0
         self.thickness = 4.0
@@ -26,7 +30,6 @@ class HandlerClass:
         self._set_entry("entry_tool_no", self.tool_no)
         self._set_entry("entry_tool_dia", self.tool_dia)
         self._set_entry("entry_feed", self.feed)
-
         self._update_status()
         self._highlight_all()
 
@@ -51,6 +54,7 @@ class HandlerClass:
         label = self._obj("label_status")
         if label:
             label.set_text(text)
+        print(text)
 
     def _update_status(self):
         self._set_status(
@@ -70,6 +74,14 @@ class HandlerClass:
             self._set_button_label(name, int(self.thickness) == value)
         for value, name in self.dia_buttons.items():
             self._set_button_label(name, abs(self.diameter - value) < 0.001)
+
+    def _refresh_values(self):
+        self.tool_no = self._get_float("entry_tool_no", self.tool_no)
+        self.tool_dia = self._get_float("entry_tool_dia", self.tool_dia)
+        self.feed = self._get_float("entry_feed", self.feed)
+        self.diameter = self._get_float("entry_custom_dia", self.diameter)
+        self._update_status()
+        self._highlight_all()
 
     def _set_diameter(self, dia):
         self.diameter = float(dia)
@@ -102,51 +114,29 @@ class HandlerClass:
     def on_thick_4_clicked(self, widget): self._set_thickness(4)
 
     def on_refresh_clicked(self, widget):
-        self.tool_no = self._get_float("entry_tool_no", self.tool_no)
-        self.tool_dia = self._get_float("entry_tool_dia", self.tool_dia)
-        self.feed = self._get_float("entry_feed", self.feed)
-        self.diameter = self._get_float("entry_custom_dia", self.diameter)
-        self._update_status()
-        self._highlight_all()
-
-    def _confirm(self):
-        msg = (
-            "Vyfrezovat otvor?\n\n"
-            "Prumer otvoru: %.1f mm\n"
-            "Tloustka preklizky: %.1f mm\n"
-            "Nastroj: T%d\n"
-            "Prumer nastroje: %.2f mm\n"
-            "Feed: F%d" %
-            (self.diameter, self.thickness, int(self.tool_no), self.tool_dia, int(self.feed))
-        )
-        dialog = gtk.MessageDialog(None, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING, gtk.BUTTONS_OK_CANCEL, msg)
-        dialog.set_title("Potvrzeni frezovani")
-        result = dialog.run()
-        dialog.destroy()
-        return result == gtk.RESPONSE_OK
+        self._refresh_values()
 
     def on_run_clicked(self, widget):
-        self.on_refresh_clicked(widget)
+        self._refresh_values()
 
         if self.diameter <= self.tool_dia:
             self._set_status("CHYBA: prumer otvoru musi byt vetsi nez prumer nastroje.")
             return
 
-        if not self._confirm():
-            self._set_status("Zruseno.")
-            return
-
-        mdi = "o<relief_hole> call [%.3f] [%.3f] [%.0f] [%.3f] [%.0f]" % (
+        mdi = "o<relief_hole> call [%g] [%g] [%g] [%g] [%g]" % (
             self.diameter, self.thickness, self.tool_no, self.tool_dia, self.feed
         )
 
         try:
+            self.stat.poll()
+            self._set_status("Posilam MDI: " + mdi)
             self.command.mode(linuxcnc.MODE_MDI)
-            self.command.wait_complete()
+            self.command.wait_complete(2.0)
             self.command.mdi(mdi)
-            self._set_status("Spusteno: " + mdi)
+            self.command.wait_complete(2.0)
+            self._set_status("Odeslano: " + mdi)
         except Exception as e:
-            self._set_status("CHYBA pri spusteni MDI: %s" % e)
+            self._set_status("CHYBA MDI: " + str(e))
 
 def get_handlers(halcomp, builder, useropts):
     return [HandlerClass(halcomp, builder, useropts)]

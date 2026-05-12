@@ -1,0 +1,109 @@
+%
+(RECTANGLE CUT MACRO FOR LINUXCNC)
+(Usage: o<rectangle_cut> call [width] [height] [corner_radius] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [local_mode])
+o<rectangle_cut> sub
+
+    #<rect_w>     = #1
+    #<rect_h>     = #2
+    #<corner_r>   = #3
+    #<mat_thick>  = #4
+    #<tool_no>    = #5
+    #<tool_dia>   = #6
+    #<cut_feed>   = #7
+    #<local_mode> = #8
+
+    #<plunge_feed> = 50
+    #<spindle_rpm> = 20000
+    #<safe_z>      = 8
+    #<start_z>     = 3
+    #<near_z>      = 0.2
+    #<lead>        = 0.6
+
+    (ZERO CURRENT POSITION AS G54 X0 Y0 Z0)
+    G10 L20 P1 X0 Y0 Z0
+    G54
+
+    #<tool_r> = [#<tool_dia> / 2]
+    #<x>      = [[#<rect_w> / 2] - #<tool_r>]
+    #<y>      = [[#<rect_h> / 2] - #<tool_r>]
+    #<path_r> = [#<corner_r> - #<tool_r>]
+    #<max_corner_r> = [#<rect_w> / 2]
+    o90 if [#<max_corner_r> GT [#<rect_h> / 2]]
+        #<max_corner_r> = [#<rect_h> / 2]
+    o90 endif
+    #<z_final> = [0 - #<mat_thick>]
+    #<z_pre>   = [#<z_final> + 0.1]
+
+    o100 if [#<x> LE 0]
+        (MSG, ERROR: TOOL DIAMETER IS TOO LARGE FOR RECTANGLE WIDTH)
+        M2
+    o100 endif
+
+    o110 if [#<y> LE 0]
+        (MSG, ERROR: TOOL DIAMETER IS TOO LARGE FOR RECTANGLE HEIGHT)
+        M2
+    o110 endif
+
+    o120 if [#<corner_r> LT 0]
+        (MSG, ERROR: CORNER RADIUS CANNOT BE NEGATIVE)
+        M2
+    o120 endif
+
+    o130 if [#<corner_r> GT #<max_corner_r>]
+        (MSG, ERROR: CORNER RADIUS IS TOO LARGE FOR THIS RECTANGLE)
+        M2
+    o130 endif
+
+    o140 if [#<path_r> LT 0]
+        #<path_r> = 0
+    o140 endif
+
+    G0 Z#<safe_z>
+    o150 if [#<local_mode> EQ 0]
+        T#<tool_no> M6
+        G43 H#<tool_no>
+    o150 endif
+
+    G21
+    G17
+    G90
+    G94
+    G54
+    G64 P0.01 Q0.01
+
+    S#<spindle_rpm> M3
+    G4 P2
+
+    G0 Z#<safe_z>
+    G0 X[#<x> - #<lead>] Y[-#<y>]
+    G0 Z#<start_z>
+
+    G1 Z#<near_z> F#<plunge_feed>
+    G1 Z#<z_pre>
+
+    (Short ramp into the inside rectangle path.)
+    G1 X[#<x> - #<path_r>] Y[-#<y>] Z#<z_final> F#<cut_feed>
+    G1 X[-#<x> + #<path_r>] Y[-#<y>]
+    o200 if [#<path_r> GT 0]
+        G2 X[-#<x>] Y[-#<y> + #<path_r>] I0 J#<path_r>
+    o200 endif
+    G1 X[-#<x>] Y[#<y> - #<path_r>]
+    o210 if [#<path_r> GT 0]
+        G2 X[-#<x> + #<path_r>] Y#<y> I#<path_r> J0
+    o210 endif
+    G1 X[#<x> - #<path_r>] Y#<y>
+    o220 if [#<path_r> GT 0]
+        G2 X#<x> Y[#<y> - #<path_r>] I0 J[-#<path_r>]
+    o220 endif
+    G1 X#<x> Y[-#<y> + #<path_r>]
+    o230 if [#<path_r> GT 0]
+        G2 X[#<x> - #<path_r>] Y[-#<y>] I[-#<path_r>] J0
+    o230 endif
+
+    G1 X[#<x> - #<lead>] Y[-#<y>]
+    G0 Z#<safe_z>
+    M5
+
+o<rectangle_cut> endsub
+M2
+%

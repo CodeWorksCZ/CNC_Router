@@ -1,6 +1,6 @@
 %
 (UNIVERSAL RELIEF HOLE MACRO FOR LINUXCNC)
-(Usage: o<relief_hole> call [hole_diameter] [material_thickness] [tool_number] [tool_diameter] [cutting_feed])
+(Usage: o<relief_hole> call [hole_diameter] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [hole_count] [spacing] [direction] [local_mode])
 o<relief_hole> sub
 
     #<hole_dia>   = #1
@@ -8,6 +8,10 @@ o<relief_hole> sub
     #<tool_no>    = #3
     #<tool_dia>   = #4
     #<cut_feed>   = #5
+    #<hole_count> = #6
+    #<spacing>    = #7
+    #<direction>  = #8
+    #<local_mode> = #9
 
     #<plunge_feed> = 50
     #<spindle_rpm> = 20000
@@ -23,14 +27,42 @@ o<relief_hole> sub
     #<z_final> = [0 - #<mat_thick>]
     #<z_pre>   = [#<z_final> + 0.1]
 
+    o90 if [#<hole_count> LT 1]
+        #<hole_count> = 1
+    o90 endif
+
     o100 if [#<r> LE 0]
         (MSG, ERROR: TOOL DIAMETER IS TOO LARGE FOR THIS HOLE)
         M2
     o100 endif
 
+    o110 if [#<spacing> LT 0]
+        (MSG, ERROR: HOLE SPACING CANNOT BE NEGATIVE)
+        M2
+    o110 endif
+
+    o115 if [#<hole_count> GT 1]
+        o116 if [#<spacing> LE 0]
+            (MSG, ERROR: HOLE SPACING MUST BE GREATER THAN ZERO FOR MULTIPLE HOLES)
+            M2
+        o116 endif
+    o115 endif
+
+    o120 if [#<direction> LT 0]
+        (MSG, ERROR: HOLE DIRECTION MUST BE 0 TO 3)
+        M2
+    o120 endif
+
+    o130 if [#<direction> GT 3]
+        (MSG, ERROR: HOLE DIRECTION MUST BE 0 TO 3)
+        M2
+    o130 endif
+
     G0 Z#<safe_z>
-    T#<tool_no> M6
-    G43 H#<tool_no>
+    o140 if [#<local_mode> EQ 0]
+        T#<tool_no> M6
+        G43 H#<tool_no>
+    o140 endif
 
     G21
     G17
@@ -42,37 +74,57 @@ o<relief_hole> sub
     S#<spindle_rpm> M3
     G4 P2
 
-    G0 Z#<safe_z>
-    G0 X[#<r> - 0.3] Y-0.1
-    G0 Z#<start_z>
+    #<i> = 0
+    o200 while [#<i> LT #<hole_count>]
+        #<cx> = 0
+        #<cy> = 0
+        o210 if [#<direction> EQ 0]
+            #<cx> = [#<i> * #<spacing>]
+        o210 endif
+        o220 if [#<direction> EQ 1]
+            #<cx> = [0 - [#<i> * #<spacing>]]
+        o220 endif
+        o230 if [#<direction> EQ 2]
+            #<cy> = [#<i> * #<spacing>]
+        o230 endif
+        o240 if [#<direction> EQ 3]
+            #<cy> = [0 - [#<i> * #<spacing>]]
+        o240 endif
 
-    G1 Z#<near_z> F#<plunge_feed>
-    G1 Z#<z_pre>
+        G0 Z#<safe_z>
+        G0 X[#<cx> + #<r> - 0.3] Y[#<cy> - 0.1]
+        G0 Z#<start_z>
 
-    G1 X[#<r> - 0.292] Z[#<z_pre> - 0.038] F#<cut_feed>
-    G1 X[#<r> - 0.271] Z[#<z_pre> - 0.071]
-    G1 X[#<r> - 0.238] Z[#<z_pre> - 0.092]
-    G1 X[#<r> - 0.2] Z#<z_final>
-    G1 X[#<r> - 0.1]
-    G1 X[#<r> - 0.062] Y-0.092
-    G1 X[#<r> - 0.029] Y-0.071
-    G1 X[#<r> - 0.008] Y-0.038
-    G1 X#<r> Y0
+        G1 Z#<near_z> F#<plunge_feed>
+        G1 Z#<z_pre>
 
-    G3 X[-#<r>] I[-#<r>] J0
-    G3 X#<r> I#<r> J0
+        G1 X[#<cx> + #<r> - 0.292] Z[#<z_pre> - 0.038] F#<cut_feed>
+        G1 X[#<cx> + #<r> - 0.271] Z[#<z_pre> - 0.071]
+        G1 X[#<cx> + #<r> - 0.238] Z[#<z_pre> - 0.092]
+        G1 X[#<cx> + #<r> - 0.2] Z#<z_final>
+        G1 X[#<cx> + #<r> - 0.1]
+        G1 X[#<cx> + #<r> - 0.062] Y[#<cy> - 0.092]
+        G1 X[#<cx> + #<r> - 0.029] Y[#<cy> - 0.071]
+        G1 X[#<cx> + #<r> - 0.008] Y[#<cy> - 0.038]
+        G1 X[#<cx> + #<r>] Y#<cy>
 
-    G1 X[#<r> - 0.008] Y0.038
-    G1 X[#<r> - 0.029] Y0.071
-    G1 X[#<r> - 0.062] Y0.092
-    G1 X[#<r> - 0.1] Y0.1
-    G1 X[#<r> - 0.2]
-    G1 X[#<r> - 0.238] Z[#<z_pre> - 0.092]
-    G1 X[#<r> - 0.271] Z[#<z_pre> - 0.071]
-    G1 X[#<r> - 0.292] Z[#<z_pre> - 0.038]
-    G1 X[#<r> - 0.3] Z#<z_pre>
+        G3 X[#<cx> - #<r>] Y#<cy> I[-#<r>] J0
+        G3 X[#<cx> + #<r>] Y#<cy> I#<r> J0
 
-    G0 Z#<safe_z>
+        G1 X[#<cx> + #<r> - 0.008] Y[#<cy> + 0.038]
+        G1 X[#<cx> + #<r> - 0.029] Y[#<cy> + 0.071]
+        G1 X[#<cx> + #<r> - 0.062] Y[#<cy> + 0.092]
+        G1 X[#<cx> + #<r> - 0.1] Y[#<cy> + 0.1]
+        G1 X[#<cx> + #<r> - 0.2]
+        G1 X[#<cx> + #<r> - 0.238] Z[#<z_pre> - 0.092]
+        G1 X[#<cx> + #<r> - 0.271] Z[#<z_pre> - 0.071]
+        G1 X[#<cx> + #<r> - 0.292] Z[#<z_pre> - 0.038]
+        G1 X[#<cx> + #<r> - 0.3] Z#<z_pre>
+
+        G0 Z#<safe_z>
+        #<i> = [#<i> + 1]
+    o200 endwhile
+
     M5
 
 o<relief_hole> endsub

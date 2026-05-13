@@ -23,6 +23,7 @@ class HandlerClass:
         self.spacing = 10.0
         self.direction = 0.0
         self.local_mode = False
+        self.dry_run = False
 
         self.dia_buttons = {
             10: "dia_10", 15: "dia_15", 20: "dia_20", 25: "dia_25", 30: "dia_30",
@@ -81,9 +82,10 @@ class HandlerClass:
         direction_names = {0: "+X", 1: "-X", 2: "+Y", 3: "-Y"}
         direction_name = direction_names.get(int(self.direction), "+X")
         mode_name = "local" if self.local_mode else "toolchange"
+        dry_name = "dry run" if self.dry_run else "cut"
         self._set_status(
-            "Selected: hole %.1f mm | material %.1f mm | %d holes, %.1f mm spacing, %s | %s | T%d | tool %.2f mm | F%d" %
-            (self.diameter, self.thickness, int(self.hole_count), self.spacing, direction_name, mode_name, int(self.tool_no), self.tool_dia, int(self.feed))
+            "Selected: hole %.1f mm | material %.1f mm | %d holes, %.1f mm spacing, %s | %s | %s | T%d | tool %.2f mm | F%d" %
+            (self.diameter, self.thickness, int(self.hole_count), self.spacing, direction_name, mode_name, dry_name, int(self.tool_no), self.tool_dia, int(self.feed))
         )
 
     def _set_button_label(self, name, active):
@@ -112,6 +114,7 @@ class HandlerClass:
         self.hole_count = self._get_float("entry_count", self.hole_count)
         self.spacing = self._get_float("entry_spacing", self.spacing)
         self.local_mode = self._get_bool("check_local_mode", self.local_mode)
+        self.dry_run = self._get_bool("check_dry_run", self.dry_run)
         self._update_status()
         self._highlight_all()
 
@@ -193,9 +196,9 @@ class HandlerClass:
             self._set_status("ERROR: direction must be +X, -X, +Y, or -Y.")
             return
 
-        mdi = "o<relief_hole> call [%g] [%g] [%g] [%g] [%g] [%d] [%g] [%d] [%d]" % (
+        mdi = "o<relief_hole> call [%g] [%g] [%g] [%g] [%g] [%d] [%g] [%d] [%d] [%d]" % (
             self.diameter, self.thickness, self.tool_no, self.tool_dia, self.feed,
-            int(self.hole_count), self.spacing, int(self.direction), int(self.local_mode)
+            int(self.hole_count), self.spacing, int(self.direction), int(self.local_mode), int(self.dry_run)
         )
 
         try:

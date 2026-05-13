@@ -19,11 +19,17 @@ class HandlerClass:
         self.tool_dia = 1.0
         self.feed = 200.0
         self.local_mode = False
+        self.dry_run = False
+        self.count = 1.0
+        self.spacing = 10.0
+        self.direction = 0.0
 
         self.width_buttons = {20: "width_20", 30: "width_30", 40: "width_40", 50: "width_50", 60: "width_60", 80: "width_80"}
         self.height_buttons = {10: "height_10", 15: "height_15", 20: "height_20", 25: "height_25", 30: "height_30", 40: "height_40"}
         self.radius_buttons = {0: "radius_0", 2: "radius_2", 3: "radius_3", 5: "radius_5", 8: "radius_8", 10: "radius_10"}
         self.thick_buttons = {2: "thick_2", 3: "thick_3", 4: "thick_4"}
+        self.count_buttons = {1: "count_1", 2: "count_2", 5: "count_5", 10: "count_10"}
+        self.direction_buttons = {0: "direction_x_pos", 1: "direction_x_neg", 2: "direction_y_pos", 3: "direction_y_neg"}
 
         self._set_entry("entry_width", self.width)
         self._set_entry("entry_height", self.height)
@@ -31,6 +37,8 @@ class HandlerClass:
         self._set_entry("entry_tool_no", self.tool_no)
         self._set_entry("entry_tool_dia", self.tool_dia)
         self._set_entry("entry_feed", self.feed)
+        self._set_entry("entry_count", self.count)
+        self._set_entry("entry_spacing", self.spacing)
         self._update_status()
         self._highlight_all()
 
@@ -68,9 +76,11 @@ class HandlerClass:
 
     def _update_status(self):
         mode_name = "local" if self.local_mode else "toolchange"
+        dry_name = "dry run" if self.dry_run else "cut"
+        direction_name = {0: "+X", 1: "-X", 2: "+Y", 3: "-Y"}.get(int(self.direction), "?")
         self._set_status(
-            "Selected: rectangle %.1f x %.1f mm | R%.1f | material %.1f mm | %s | T%d | tool %.2f mm | F%d" %
-            (self.width, self.height, self.corner_r, self.thickness, mode_name, int(self.tool_no), self.tool_dia, int(self.feed))
+            "Selected: rectangle %.1f x %.1f mm | R%.1f | pattern %dx @ %.1f mm %s | material %.1f mm | %s | %s | T%d | tool %.2f mm | F%d" %
+            (self.width, self.height, self.corner_r, int(self.count), self.spacing, direction_name, self.thickness, mode_name, dry_name, int(self.tool_no), self.tool_dia, int(self.feed))
         )
 
     def _set_button_label(self, name, active):
@@ -89,6 +99,10 @@ class HandlerClass:
             self._set_button_label(name, abs(self.corner_r - value) < 0.001)
         for value, name in self.thick_buttons.items():
             self._set_button_label(name, int(self.thickness) == value)
+        for value, name in self.count_buttons.items():
+            self._set_button_label(name, int(self.count) == value)
+        for value, name in self.direction_buttons.items():
+            self._set_button_label(name, int(self.direction) == value)
 
     def _refresh_values(self):
         self.width = self._get_float("entry_width", self.width)
@@ -97,7 +111,10 @@ class HandlerClass:
         self.tool_no = self._get_float("entry_tool_no", self.tool_no)
         self.tool_dia = self._get_float("entry_tool_dia", self.tool_dia)
         self.feed = self._get_float("entry_feed", self.feed)
+        self.count = self._get_float("entry_count", self.count)
+        self.spacing = self._get_float("entry_spacing", self.spacing)
         self.local_mode = self._get_bool("check_local_mode", self.local_mode)
+        self.dry_run = self._get_bool("check_dry_run", self.dry_run)
         self._update_status()
         self._highlight_all()
 
@@ -121,6 +138,17 @@ class HandlerClass:
 
     def _set_thickness(self, thick):
         self.thickness = float(thick)
+        self._update_status()
+        self._highlight_all()
+
+    def _set_count(self, count):
+        self.count = float(count)
+        self._set_entry("entry_count", self.count)
+        self._update_status()
+        self._highlight_all()
+
+    def _set_direction(self, direction):
+        self.direction = float(direction)
         self._update_status()
         self._highlight_all()
 
@@ -149,6 +177,16 @@ class HandlerClass:
     def on_thick_3_clicked(self, widget): self._set_thickness(3)
     def on_thick_4_clicked(self, widget): self._set_thickness(4)
 
+    def on_count_1_clicked(self, widget): self._set_count(1)
+    def on_count_2_clicked(self, widget): self._set_count(2)
+    def on_count_5_clicked(self, widget): self._set_count(5)
+    def on_count_10_clicked(self, widget): self._set_count(10)
+
+    def on_direction_x_pos_clicked(self, widget): self._set_direction(0)
+    def on_direction_x_neg_clicked(self, widget): self._set_direction(1)
+    def on_direction_y_pos_clicked(self, widget): self._set_direction(2)
+    def on_direction_y_neg_clicked(self, widget): self._set_direction(3)
+
     def on_refresh_clicked(self, widget):
         self._refresh_values()
 
@@ -156,33 +194,46 @@ class HandlerClass:
         self._refresh_values()
 
         if self.width <= self.tool_dia:
-            self._set_status("CHYBA: sirka musi byt vetsi nez prumer nastroje.")
+            self._set_status("ERROR: width must be larger than tool diameter.")
             return
         if self.height <= self.tool_dia:
-            self._set_status("CHYBA: vyska musi byt vetsi nez prumer nastroje.")
+            self._set_status("ERROR: height must be larger than tool diameter.")
             return
         if self.corner_r < 0:
-            self._set_status("CHYBA: radius rohu nemuze byt zaporny.")
+            self._set_status("ERROR: corner radius cannot be negative.")
             return
         max_radius = min(self.width, self.height) / 2.0
         if self.corner_r > max_radius:
-            self._set_status("CHYBA: radius rohu je prilis velky.")
+            self._set_status("ERROR: corner radius is too large.")
+            return
+        if self.count < 1:
+            self._set_status("ERROR: pattern count must be at least 1.")
+            return
+        if self.spacing < 0:
+            self._set_status("ERROR: pattern spacing cannot be negative.")
+            return
+        if int(self.count) > 1 and self.spacing <= 0:
+            self._set_status("ERROR: pattern spacing must be greater than zero for multiple rectangles.")
+            return
+        if int(self.direction) not in (0, 1, 2, 3):
+            self._set_status("ERROR: pattern direction must be +X, -X, +Y, or -Y.")
             return
 
-        mdi = "o<rectangle_cut> call [%g] [%g] [%g] [%g] [%g] [%g] [%g] [%d]" % (
-            self.width, self.height, self.corner_r, self.thickness, self.tool_no, self.tool_dia, self.feed, int(self.local_mode)
+        mdi = "o<rectangle_cut> call [%g] [%g] [%g] [%g] [%g] [%g] [%g] [%d] [%d] [%g] [%d] [%d]" % (
+            self.width, self.height, self.corner_r, self.thickness, self.tool_no, self.tool_dia, self.feed,
+            int(self.local_mode), int(self.count), self.spacing, int(self.direction), int(self.dry_run)
         )
 
         try:
             self.stat.poll()
-            self._set_status("Posilam MDI: " + mdi)
+            self._set_status("Sending MDI: " + mdi)
             self.command.mode(linuxcnc.MODE_MDI)
             self.command.wait_complete(2.0)
             self.command.mdi(mdi)
             self.command.wait_complete(2.0)
-            self._set_status("Odeslano: " + mdi)
+            self._set_status("Sent: " + mdi)
         except Exception as e:
-            self._set_status("CHYBA MDI: " + str(e))
+            self._set_status("MDI ERROR: " + str(e))
 
 
 def get_handlers(halcomp, builder, useropts):

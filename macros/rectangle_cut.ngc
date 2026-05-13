@@ -1,6 +1,6 @@
 %
 (RECTANGLE CUT MACRO FOR LINUXCNC)
-(Usage: o<rectangle_cut> call [width] [height] [corner_radius] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [local_mode])
+(Usage: o<rectangle_cut> call [width] [height] [corner_radius] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [local_mode] [count] [spacing] [direction] [dry_run])
 o<rectangle_cut> sub
 
     #<rect_w>     = #1
@@ -11,6 +11,10 @@ o<rectangle_cut> sub
     #<tool_dia>   = #6
     #<cut_feed>   = #7
     #<local_mode> = #8
+    #<count>      = #9
+    #<spacing>    = #10
+    #<direction>  = #11
+    #<dry_run>    = #12
 
     #<plunge_feed> = 50
     #<spindle_rpm> = 20000
@@ -33,6 +37,17 @@ o<rectangle_cut> sub
     o90 endif
     #<z_final> = [0 - #<mat_thick>]
     #<z_pre>   = [#<z_final> + 0.1]
+    #<ox> = 0
+    #<oy> = 0
+
+    o80 if [#<local_mode> NE 0]
+        #<ox> = [#<rect_w> / 2]
+        #<oy> = [#<rect_h> / 2]
+    o80 endif
+
+    o85 if [#<count> LT 1]
+        #<count> = 1
+    o85 endif
 
     o100 if [#<x> LE 0]
         (MSG, ERROR: TOOL DIAMETER IS TOO LARGE FOR RECTANGLE WIDTH)
@@ -58,10 +73,34 @@ o<rectangle_cut> sub
         #<path_r> = 0
     o140 endif
 
+    o145 if [#<spacing> LT 0]
+        (MSG, ERROR: RECTANGLE SPACING CANNOT BE NEGATIVE)
+        M2
+    o145 endif
+
+    o146 if [#<count> GT 1]
+        o147 if [#<spacing> LE 0]
+            (MSG, ERROR: RECTANGLE SPACING MUST BE GREATER THAN ZERO FOR MULTIPLE CUTS)
+            M2
+        o147 endif
+    o146 endif
+
+    o148 if [#<direction> LT 0]
+        (MSG, ERROR: RECTANGLE DIRECTION MUST BE 0 TO 3)
+        M2
+    o148 endif
+
+    o149 if [#<direction> GT 3]
+        (MSG, ERROR: RECTANGLE DIRECTION MUST BE 0 TO 3)
+        M2
+    o149 endif
+
     G0 Z#<safe_z>
-    o150 if [#<local_mode> EQ 0]
-        T#<tool_no> M6
-        G43 H#<tool_no>
+    o150 if [#<dry_run> EQ 0]
+        o151 if [#<local_mode> EQ 0]
+            T#<tool_no> M6
+            G43 H#<tool_no>
+        o151 endif
     o150 endif
 
     G21
@@ -71,37 +110,78 @@ o<rectangle_cut> sub
     G54
     G64 P0.01 Q0.01
 
-    S#<spindle_rpm> M3
-    G4 P2
+    o160 if [#<dry_run> EQ 0]
+        S#<spindle_rpm> M3
+        G4 P2
+    o160 endif
 
-    G0 Z#<safe_z>
-    G0 X[#<x> - #<lead>] Y[-#<y>]
-    G0 Z#<start_z>
+    #<i> = 0
+    o300 while [#<i> LT #<count>]
+        #<px> = 0
+        #<py> = 0
+        o310 if [#<direction> EQ 0]
+            #<px> = [#<i> * #<spacing>]
+        o310 endif
+        o320 if [#<direction> EQ 1]
+            #<px> = [0 - [#<i> * #<spacing>]]
+        o320 endif
+        o330 if [#<direction> EQ 2]
+            #<py> = [#<i> * #<spacing>]
+        o330 endif
+        o340 if [#<direction> EQ 3]
+            #<py> = [0 - [#<i> * #<spacing>]]
+        o340 endif
 
-    G1 Z#<near_z> F#<plunge_feed>
-    G1 Z#<z_pre>
+        G0 Z#<safe_z>
+        G0 X[#<px> + #<ox> + #<x> - #<lead>] Y[#<py> + #<oy> - #<y>]
 
-    (Short ramp into the inside rectangle path.)
-    G1 X[#<x> - #<path_r>] Y[-#<y>] Z#<z_final> F#<cut_feed>
-    G1 X[-#<x> + #<path_r>] Y[-#<y>]
-    o200 if [#<path_r> GT 0]
-        G2 X[-#<x>] Y[-#<y> + #<path_r>] I0 J#<path_r>
-    o200 endif
-    G1 X[-#<x>] Y[#<y> - #<path_r>]
-    o210 if [#<path_r> GT 0]
-        G2 X[-#<x> + #<path_r>] Y#<y> I#<path_r> J0
-    o210 endif
-    G1 X[#<x> - #<path_r>] Y#<y>
-    o220 if [#<path_r> GT 0]
-        G2 X#<x> Y[#<y> - #<path_r>] I0 J[-#<path_r>]
-    o220 endif
-    G1 X#<x> Y[-#<y> + #<path_r>]
-    o230 if [#<path_r> GT 0]
-        G2 X[#<x> - #<path_r>] Y[-#<y>] I[-#<path_r>] J0
-    o230 endif
+        o350 if [#<dry_run> NE 0]
+            G1 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> - #<y>] F#<cut_feed>
+            G1 X[#<px> + #<ox> - #<x> + #<path_r>] Y[#<py> + #<oy> - #<y>]
+            o360 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> - #<x>] Y[#<py> + #<oy> - #<y> + #<path_r>] I0 J#<path_r>
+            o360 endif
+            G1 X[#<px> + #<ox> - #<x>] Y[#<py> + #<oy> + #<y> - #<path_r>]
+            o370 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> - #<x> + #<path_r>] Y[#<py> + #<oy> + #<y>] I#<path_r> J0
+            o370 endif
+            G1 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> + #<y>]
+            o380 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> + #<x>] Y[#<py> + #<oy> + #<y> - #<path_r>] I0 J[-#<path_r>]
+            o380 endif
+            G1 X[#<px> + #<ox> + #<x>] Y[#<py> + #<oy> - #<y> + #<path_r>]
+            o390 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> - #<y>] I[-#<path_r>] J0
+            o390 endif
+        o350 else
+            G0 Z#<start_z>
 
-    G1 X[#<x> - #<lead>] Y[-#<y>]
-    G0 Z#<safe_z>
+            G1 Z#<near_z> F#<plunge_feed>
+            G1 Z#<z_pre>
+
+            (Short ramp into the inside rectangle path.)
+            G1 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> - #<y>] Z#<z_final> F#<cut_feed>
+            G1 X[#<px> + #<ox> - #<x> + #<path_r>] Y[#<py> + #<oy> - #<y>]
+            o200 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> - #<x>] Y[#<py> + #<oy> - #<y> + #<path_r>] I0 J#<path_r>
+            o200 endif
+            G1 X[#<px> + #<ox> - #<x>] Y[#<py> + #<oy> + #<y> - #<path_r>]
+            o210 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> - #<x> + #<path_r>] Y[#<py> + #<oy> + #<y>] I#<path_r> J0
+            o210 endif
+            G1 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> + #<y>]
+            o220 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> + #<x>] Y[#<py> + #<oy> + #<y> - #<path_r>] I0 J[-#<path_r>]
+            o220 endif
+            G1 X[#<px> + #<ox> + #<x>] Y[#<py> + #<oy> - #<y> + #<path_r>]
+            o230 if [#<path_r> GT 0]
+                G2 X[#<px> + #<ox> + #<x> - #<path_r>] Y[#<py> + #<oy> - #<y>] I[-#<path_r>] J0
+            o230 endif
+        o350 endif
+
+        G0 Z#<safe_z>
+        #<i> = [#<i> + 1]
+    o300 endwhile
     M5
 
 o<rectangle_cut> endsub

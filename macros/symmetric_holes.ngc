@@ -1,0 +1,130 @@
+%
+(SYMMETRIC TWO HOLES MACRO FOR LINUXCNC)
+(Usage: o<symmetric_holes> call [hole_diameter] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [distance_from_center] [axis] [local_mode] [dry_run])
+o<symmetric_holes> sub
+
+    #<hole_dia>  = #1
+    #<mat_thick> = #2
+    #<tool_no>   = #3
+    #<tool_dia>  = #4
+    #<cut_feed>  = #5
+    #<distance>  = #6
+    #<axis>       = #7
+    #<local_mode> = #8
+    #<dry_run>    = #9
+
+    #<plunge_feed> = 50
+    #<spindle_rpm> = 20000
+    #<safe_z>      = 8
+    #<start_z>     = 3
+    #<near_z>      = 0.2
+
+    (ZERO CURRENT POSITION AS G54 X0 Y0 Z0 - CENTER BETWEEN HOLES)
+    G10 L20 P1 X0 Y0 Z0
+    G54
+
+    #<r>       = [[#<hole_dia> / 2] - [#<tool_dia> / 2]]
+    #<z_final> = [0 - #<mat_thick>]
+    #<z_pre>   = [#<z_final> + 0.1]
+
+    o100 if [#<r> LE 0]
+        (MSG, ERROR: TOOL DIAMETER IS TOO LARGE FOR THIS HOLE)
+        M2
+    o100 endif
+
+    o110 if [#<distance> LE 0]
+        (MSG, ERROR: DISTANCE FROM CENTER MUST BE GREATER THAN ZERO)
+        M2
+    o110 endif
+
+    o115 if [#<axis> LT 0]
+        (MSG, ERROR: AXIS MUST BE 0 FOR X OR 1 FOR Y)
+        M2
+    o115 endif
+
+    o116 if [#<axis> GT 1]
+        (MSG, ERROR: AXIS MUST BE 0 FOR X OR 1 FOR Y)
+        M2
+    o116 endif
+
+    G0 Z#<safe_z>
+    o120 if [#<dry_run> EQ 0]
+        o121 if [#<local_mode> EQ 0]
+            T#<tool_no> M6
+            G43 H#<tool_no>
+        o121 endif
+    o120 endif
+
+    G21
+    G17
+    G90
+    G94
+    G54
+    G64 P0.01 Q0.01
+
+    o130 if [#<dry_run> EQ 0]
+        S#<spindle_rpm> M3
+        G4 P2
+    o130 endif
+
+    #<i> = 0
+    o200 while [#<i> LT 2]
+        #<cx> = 0
+        #<cy> = 0
+        o205 if [#<axis> EQ 0]
+            #<cx> = #<distance>
+        o205 endif
+        o206 if [#<axis> EQ 1]
+            #<cy> = #<distance>
+        o206 endif
+        o210 if [#<i> EQ 0]
+            #<cx> = [0 - #<cx>]
+            #<cy> = [0 - #<cy>]
+        o210 endif
+
+        G0 Z#<safe_z>
+        G0 X[#<cx> + #<r> - 0.3] Y[#<cy> - 0.1]
+
+        o250 if [#<dry_run> NE 0]
+            G1 X[#<cx> + #<r>] Y#<cy> F#<cut_feed>
+            G3 X[#<cx> - #<r>] Y#<cy> I[-#<r>] J0
+            G3 X[#<cx> + #<r>] Y#<cy> I#<r> J0
+        o250 else
+            G0 Z#<start_z>
+
+            G1 Z#<near_z> F#<plunge_feed>
+            G1 Z#<z_pre>
+
+            G1 X[#<cx> + #<r> - 0.292] Z[#<z_pre> - 0.038] F#<cut_feed>
+            G1 X[#<cx> + #<r> - 0.271] Z[#<z_pre> - 0.071]
+            G1 X[#<cx> + #<r> - 0.238] Z[#<z_pre> - 0.092]
+            G1 X[#<cx> + #<r> - 0.2] Z#<z_final>
+            G1 X[#<cx> + #<r> - 0.1]
+            G1 X[#<cx> + #<r> - 0.062] Y[#<cy> - 0.092]
+            G1 X[#<cx> + #<r> - 0.029] Y[#<cy> - 0.071]
+            G1 X[#<cx> + #<r> - 0.008] Y[#<cy> - 0.038]
+            G1 X[#<cx> + #<r>] Y#<cy>
+
+            G3 X[#<cx> - #<r>] Y#<cy> I[-#<r>] J0
+            G3 X[#<cx> + #<r>] Y#<cy> I#<r> J0
+
+            G1 X[#<cx> + #<r> - 0.008] Y[#<cy> + 0.038]
+            G1 X[#<cx> + #<r> - 0.029] Y[#<cy> + 0.071]
+            G1 X[#<cx> + #<r> - 0.062] Y[#<cy> + 0.092]
+            G1 X[#<cx> + #<r> - 0.1] Y[#<cy> + 0.1]
+            G1 X[#<cx> + #<r> - 0.2]
+            G1 X[#<cx> + #<r> - 0.238] Z[#<z_pre> - 0.092]
+            G1 X[#<cx> + #<r> - 0.271] Z[#<z_pre> - 0.071]
+            G1 X[#<cx> + #<r> - 0.292] Z[#<z_pre> - 0.038]
+            G1 X[#<cx> + #<r> - 0.3] Z#<z_pre>
+        o250 endif
+
+        G0 Z#<safe_z>
+        #<i> = [#<i> + 1]
+    o200 endwhile
+
+    M5
+
+o<symmetric_holes> endsub
+M2
+%

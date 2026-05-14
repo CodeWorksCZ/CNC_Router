@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="2.16"/>
+  <object class="GtkWindow" id="window1">
+    <property name="visible">True</property>
+    <property name="title">Symmetric Holes Touch Panel</property>
+    <child>
+      <object class="GtkAlignment" id="align_top">
+        <property name="visible">True</property>
+        <property name="xalign">0.0</property>
+        <property name="yalign">0.0</property>
+        <property name="xscale">0.0</property>
+        <property name="yscale">0.0</property>
+        <property name="top_padding">4</property>
+        <property name="left_padding">4</property>
+        <child>
+          <object class="GtkVBox" id="main_box">
+            <property name="visible">True</property>
+            <property name="border_width">2</property>
+            <property name="spacing">4</property>
+
+            <child>
+              <object class="GtkFrame" id="frame_dia">
+                <property name="visible">True</property>
+                <property name="label">Hole dia</property>
+                <child>
+                  <object class="GtkHBox" id="dia_box">
+                    <property name="visible">True</property>
+                    <property name="spacing">4</property>
+                    <child><object class="GtkButton" id="dia_6"><property name="visible">True</property><property name="label">6</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_6_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dia_8"><property name="visible">True</property><property name="label">8</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_8_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dia_10"><property name="visible">True</property><property name="label">10</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_10_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dia_12"><property name="visible">True</property><property name="label">12</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_12_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dia_15"><property name="visible">True</property><property name="label">15</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_15_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dia_20"><property name="visible">True</property><property name="label">20</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_dia_20_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_dia"><property name="visible">True</property><property name="width_request">60</property><property name="height_request">44</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                  </object>
+                </child>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+            <child>
+              <object class="GtkFrame" id="frame_thickness">
+                <property name="visible">True</property>
+                <property name="label">Thickness</property>
+                <child>
+                  <object class="GtkHBox" id="thick_box">
+                    <property name="visible">True</property>
+                    <property name="spacing">4</property>
+                    <child><object class="GtkButton" id="thick_2"><property name="visible">True</property><property name="label">2 mm</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_2_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="thick_3"><property name="visible">True</property><property name="label">3 mm</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_3_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="thick_4"><property name="visible">True</property><property name="label">4 mm</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_4_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="thick_6"><property name="visible">True</property><property name="label">6 mm</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_6_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="thick_8"><property name="visible">True</property><property name="label">8 mm</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_8_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="thick_10"><property name="visible">True</property><property name="label">10</property><property name="width_request">54</property><property name="height_request">44</property><signal name="clicked" handler="on_thick_10_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_thickness"><property name="visible">True</property><property name="width_request">66</property><property name="height_request">44</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                  </object>
+                </child>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+            <child>
+              <object class="GtkFrame" id="frame_distance">
+                <property name="visible">True</property>
+                <property name="label">Distance from center</property>
+                <child>
+                  <object class="GtkHBox" id="distance_box">
+                    <property name="visible">True</property>
+                    <property name="spacing">4</property>
+                    <child><object class="GtkButton" id="dist_25"><property name="visible">True</property><property name="label">25</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_dist_25_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dist_50"><property name="visible">True</property><property name="label">50</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_dist_50_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="dist_75"><property name="visible">True</property><property name="label">75</property><property name="width_request">58</property><property name="height_request">44</property><signal name="clicked" handler="on_dist_75_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkButton" id="dist_100"><property name="visible">True</property><property name="label">100</property><property name="width_request">62</property><property name="height_request">44</property><signal name="clicked" handler="on_dist_100_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkEntry" id="entry_distance"><property name="visible">True</property><property name="width_request">72</property><property name="height_request">44</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkLabel" id="lbl_axis"><property name="visible">True</property><property name="label">Axis</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkButton" id="axis_x"><property name="visible">True</property><property name="label">X</property><property name="width_request">50</property><property name="height_request">44</property><signal name="clicked" handler="on_axis_x_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkButton" id="axis_y"><property name="visible">True</property><property name="label">Y</property><property name="width_request">50</property><property name="height_request">44</property><signal name="clicked" handler="on_axis_y_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                    <child><object class="GtkEntry" id="entry_axis"><property name="visible">False</property><property name="width_request">1</property><property name="height_request">1</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+	                  </object>
+                </child>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+            <child>
+              <object class="GtkFrame" id="frame_tool">
+                <property name="visible">True</property>
+                <property name="label">Tool / feed</property>
+                <child>
+                  <object class="GtkHBox" id="tool_box">
+                    <property name="visible">True</property>
+                    <property name="spacing">4</property>
+                    <child><object class="GtkLabel" id="lbl_tool_no"><property name="visible">True</property><property name="label">T</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_tool_no"><property name="visible">True</property><property name="width_request">60</property><property name="height_request">36</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_tool_dia"><property name="visible">True</property><property name="label">Dia</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_tool_dia"><property name="visible">True</property><property name="width_request">58</property><property name="height_request">36</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkLabel" id="lbl_feed"><property name="visible">True</property><property name="label">Feed</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkEntry" id="entry_feed"><property name="visible">True</property><property name="width_request">66</property><property name="height_request">36</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkCheckButton" id="check_local_mode"><property name="visible">True</property><property name="label">Local</property><property name="height_request">36</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkCheckButton" id="check_dry_run"><property name="visible">True</property><property name="label">Preview</property><property name="height_request">36</property></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                    <child><object class="GtkButton" id="refresh"><property name="visible">True</property><property name="label">OK</property><property name="width_request">58</property><property name="height_request">36</property><signal name="clicked" handler="on_refresh_clicked"/></object><packing><property name="expand">False</property><property name="fill">False</property></packing></child>
+                  </object>
+                </child>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+	            <child>
+	              <object class="GtkLabel" id="label_preview_hint">
+	                <property name="visible">True</property>
+	                <property name="label">Preview: XY circle outlines only at safe Z, spindle off.</property>
+	                <property name="width_request">460</property>
+	                <property name="wrap">True</property>
+	              </object>
+	              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+	            </child>
+
+	            <child>
+	              <object class="GtkLabel" id="label_status">
+                <property name="visible">True</property>
+                <property name="label">Selected...</property>
+                <property name="width_request">460</property>
+                <property name="wrap">True</property>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+            <child>
+              <object class="GtkHSeparator" id="separator_before_run">
+                <property name="visible">True</property>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">True</property></packing>
+            </child>
+
+            <child>
+              <object class="GtkButton" id="run_button">
+                <property name="visible">True</property>
+                <property name="label">CUT SYMMETRIC HOLES</property>
+                <property name="width_request">460</property>
+                <property name="height_request">54</property>
+                <signal name="clicked" handler="on_run_clicked"/>
+              </object>
+              <packing><property name="expand">False</property><property name="fill">False</property></packing>
+            </child>
+
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

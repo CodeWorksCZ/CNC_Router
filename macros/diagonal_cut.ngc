@@ -1,0 +1,100 @@
+%
+(DIAGONAL LINE CUT MACRO FOR LINUXCNC)
+(Usage: o<diagonal_cut> call [length] [width] [cut_depth] [tool_number] [tool_diameter] [cutting_feed] [axis] [local_mode] [preview])
+o<diagonal_cut> sub
+
+    #<length>     = #1
+    #<width>      = #2
+    #<cut_depth>  = #3
+    #<tool_no>    = #4
+    #<tool_dia>   = #5
+    #<cut_feed>   = #6
+    #<axis>       = #7
+    #<local_mode> = #8
+    #<preview>    = #9
+
+    #<plunge_feed> = 50
+    #<spindle_rpm> = 20000
+    #<safe_z>      = 8
+    #<start_z>     = 3
+    #<near_z>      = 0.2
+
+    (ZERO CURRENT POSITION AS G54 X0 Y0 Z0 - START OF DIAGONAL)
+    G10 L20 P1 X0 Y0 Z0
+    G54
+
+    o100 if [#<length> LE 0]
+        (MSG, ERROR: DIAGONAL LENGTH MUST BE GREATER THAN ZERO)
+        M2
+    o100 endif
+
+    o110 if [#<width> LE 0]
+        (MSG, ERROR: DIAGONAL WIDTH MUST BE GREATER THAN ZERO)
+        M2
+    o110 endif
+
+    o120 if [#<cut_depth> LE 0]
+        (MSG, ERROR: CUT DEPTH MUST BE GREATER THAN ZERO)
+        M2
+    o120 endif
+
+    o130 if [#<cut_feed> LE 0]
+        (MSG, ERROR: FEED MUST BE GREATER THAN ZERO)
+        M2
+    o130 endif
+
+    o135 if [#<axis> LT 0]
+        (MSG, ERROR: AXIS MUST BE 0 FOR X OR 1 FOR Y)
+        M2
+    o135 endif
+
+    o136 if [#<axis> GT 1]
+        (MSG, ERROR: AXIS MUST BE 0 FOR X OR 1 FOR Y)
+        M2
+    o136 endif
+
+    #<z_final> = [0 - #<cut_depth>]
+    #<end_x> = #<length>
+    #<end_y> = #<width>
+    o137 if [#<axis> EQ 1]
+        #<end_x> = #<width>
+        #<end_y> = #<length>
+    o137 endif
+
+    G0 Z#<safe_z>
+    o140 if [#<preview> EQ 0]
+        o141 if [#<local_mode> EQ 0]
+            T#<tool_no> M6
+            G43 H#<tool_no>
+        o141 endif
+    o140 endif
+
+    G21
+    G17
+    G90
+    G94
+    G54
+
+    o150 if [#<preview> EQ 0]
+        S#<spindle_rpm> M3
+        G4 P2
+    o150 endif
+
+    G0 Z#<safe_z>
+    G0 X0 Y0
+
+    o200 if [#<preview> NE 0]
+        G1 X#<end_x> Y#<end_y> F#<cut_feed>
+    o200 else
+        G0 Z#<start_z>
+        G1 Z#<near_z> F#<plunge_feed>
+        G1 Z#<z_final> F#<plunge_feed>
+        G1 X#<end_x> Y#<end_y> F#<cut_feed>
+    o200 endif
+
+    G0 Z#<safe_z>
+    M5
+
+o<diagonal_cut> endsub
+M2
+%

@@ -1,8 +1,15 @@
 o<zero_all> sub
-    G10 L20 P0 X0 Y0 Z0       ; Vynuluje souřadnice
-    G10 L1 P#5400 Z0          ; Vynuluje délku aktuálního nástroje v tabulce
-    G43                       ; Aktivuje tu nulovou délku
-    #<_first_tool_measured> = 0 ; Resetuje náš příznak pro měření
-    (MSG, System vynulovan a pripraven)
+    G10 L20 P0 X0 Y0 Z0
+
+    o100 if [#5400 GT 0]
+        G10 L1 P#5400 Z0
+        G43 H#5400
+        (MSG, System vynulovan, tool length pro aktualni nastroj resetovan)
+    o100 else
+        G49
+        (MSG, System vynulovan, neni aktivni nastroj - tool length pouze zrusen)
+    o100 endif
+
+    #<_first_tool_measured> = 0
 o<zero_all> endsub
 M2

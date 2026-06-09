@@ -1,6 +1,7 @@
 %
 (UNIVERSAL RELIEF HOLE MACRO FOR LINUXCNC)
 (Usage: o<relief_hole> call [hole_diameter] [material_thickness] [tool_number] [tool_diameter] [cutting_feed] [hole_count] [spacing] [direction] [local_mode] [dry_run])
+(Current position is the center of the first hole. Pattern spacing is center-to-center.)
 o<relief_hole> sub
 
     #<hole_dia>   = #1
@@ -59,19 +60,6 @@ o<relief_hole> sub
         M2
     o130 endif
 
-    #<base_x> = 0
-    #<base_y> = 0
-    o135 if [#<local_mode> NE 0]
-        #<base_x> = [#<hole_dia> / 2]
-        #<base_y> = [#<hole_dia> / 2]
-        o136 if [#<direction> EQ 1]
-            #<base_x> = [#<base_x> + [[#<hole_count> - 1] * #<spacing>]]
-        o136 endif
-        o137 if [#<direction> EQ 3]
-            #<base_y> = [#<base_y> + [[#<hole_count> - 1] * #<spacing>]]
-        o137 endif
-    o135 endif
-
     G0 Z#<safe_z>
     o140 if [#<dry_run> EQ 0]
         o141 if [#<local_mode> EQ 0]
@@ -108,9 +96,6 @@ o<relief_hole> sub
         o240 if [#<direction> EQ 3]
             #<cy> = [0 - [#<i> * #<spacing>]]
         o240 endif
-        #<cx> = [#<cx> + #<base_x>]
-        #<cy> = [#<cy> + #<base_y>]
-
         G0 Z#<safe_z>
         G0 X[#<cx> + #<r> - 0.3] Y[#<cy> - 0.1]
 
